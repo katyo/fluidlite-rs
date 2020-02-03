@@ -1,0 +1,21 @@
+[package]
+name = "fluidlite"
+version = "0.1.0"
+description = "Safe bindings to fluidlite library"
+categories = ["external-ffi-bindings", "multimedia::audio"]
+keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
+authors = ["K. <kayo@illumium.org>"]
+license = "LGPL-2.1"
+readme = "README.md"
+repository = "https://github.com/katyo/fluidlite-rs"
+edition = "2018"
+
+[dependencies.fluidlite-sys]
+path = "../fluidlite-sys"
+
+[features]
+generate-bindings = ["fluidlite-sys/generate-bindings"]
+rustdoc = ["fluidlite-sys/rustdoc"]
+
+[package.metadata.docs.rs]
+features = ["rustdoc"]

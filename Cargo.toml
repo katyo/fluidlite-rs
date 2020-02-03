@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "fluidlite-sys",
+  "fluidlite-lib",
+  "fluidlite",
+]

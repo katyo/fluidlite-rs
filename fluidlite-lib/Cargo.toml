@@ -1,0 +1,38 @@
+[package]
+name = "fluidlite-lib"
+version = "0.1.0"
+description = "Bundled fluidlite library"
+categories = ["external-ffi-bindings", "multimedia::audio"]
+keywords = ["audio", "synth", "soundfont", "sf2", "library"]
+authors = ["K. <kayo@illumium.org>"]
+license = "LGPL-2.1"
+readme = "README.md"
+repository = "https://github.com/katyo/fluidlite-rs"
+edition = "2018"
+
+[build-dependencies.git2]
+version = "^0.11"
+
+[build-dependencies.cmake]
+version = "^0.1"
+
+[build-dependencies.serde]
+version = "^1"
+features = ["derive"]
+
+[build-dependencies.toml]
+version = "^0.5"
+
+[features]
+shared = []
+with-sf3 = []
+rustdoc = []
+
+[package.metadata.source]
+#git = "https://github.com/divideconcept/FluidLite"
+#git = "https://github.com/wallneradam/FluidLite"
+git = "https://github.com/katyo/FluidLite"
+rev = "master"
+
+[package.metadata.docs.rs]
+features = ["rustdoc"]
