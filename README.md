@@ -5,6 +5,18 @@
 [![Docs.rs API Docs](https://docs.rs/fluidlite/badge.svg)](https://docs.rs/fluidlite)
 [![Travis-CI Status](https://travis-ci.com/katyo/fluidlite-rs.svg?branch=master)](https://travis-ci.com/katyo/fluidlite-rs)
 
+> FluidLite is a very light version of FluidSynth designed to be hardware,
+> platform and external dependency independant. It only uses standard C libraries.
+>
+> It also adds support for SF3 files (SF2 files compressed with ogg vorbis)
+> and an additional setting to remove the constraint of channel 9 (drums):
+> fluid_settings_setstr(settings, "synth.drums-channel.active", "no");
+> you can still select bank 128 on any channel to use drum kits.
+>
+> FluidLite keeps very minimal functionnalities (settings and synth),
+> therefore MIDI file reading, realtime MIDI events and audio output
+> must be implemented externally.
+
 This project aims provide safe Rust bindings to [fluidlite](https://github.com/divideconcept/FluidLite) C library.
 
 ## Crates

@@ -21,6 +21,16 @@ fluidlite = "^0.1"
 fluidlite-lib = "^0.1"
 ```
 
+Next you should say compiler that you want to use that crate:
+
+```rust
+// Either in traditional manner
+extern crate fluidlite_lib;
+
+// Or in Rust2018 manner
+use fluidlite_lib as _;
+```
+
 ## Features
 
 You can apply some customizations to library using those features:

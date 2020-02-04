@@ -14,9 +14,13 @@ in stdenv.mkDerivation {
   LIBCLANG_PATH = "${libclang}/lib";
 
   buildInputs = [
+    pkgconfig
     glibc_multi.dev
     clang
     llvm
     libclang
+    openssl
+    libssh
+    libgit2
   ];
 }

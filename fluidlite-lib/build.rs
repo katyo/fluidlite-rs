@@ -140,9 +140,10 @@ fn compile_library(src_dir: &Path) {
     let lib_dir = library.join("build");
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
-    if cfg!(feature = "shared") {
-        println!("cargo:rustc-link-lib={}", lib_name);
-    } else {
-        println!("cargo:rustc-link-lib=static={}", lib_name);
-    }
+
+    #[cfg(feature = "shared")]
+    println!("cargo:rustc-link-lib={}", lib_name);
+
+    #[cfg(not(feature = "shared"))]
+    println!("cargo:rustc-link-lib=static={}", lib_name);
 }
