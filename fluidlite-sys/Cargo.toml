@@ -32,10 +32,8 @@ generate-bindings = ["git2", "serde", "toml", "bindgen"]
 rustdoc = []
 
 [package.metadata.source]
-#git = "https://github.com/divideconcept/FluidLite"
-#git = "https://github.com/wallneradam/FluidLite"
 git = "https://github.com/katyo/FluidLite"
-rev = "master"
+rev = "custom-file-api"
 
 [package.metadata.docs.rs]
 features = ["rustdoc"]

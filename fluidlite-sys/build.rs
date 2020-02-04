@@ -91,12 +91,23 @@ mod utils {
     }
 
     fn clone_source(out_dir: &Path, src: &Source) {
-        use git2::Repository;
+        use git2::{Repository, FetchOptions, AutotagOption};
 
         let repo = Repository::clone(&src.git, out_dir)
             .expect("Fluidlite git repository should exist");
 
         let rev = repo.revparse_single(&src.rev)
+            .or_else(|_| {
+                let mut remote = repo.find_remote("origin")?;
+
+                remote.fetch(&[&src.rev],
+                             Some(FetchOptions::new()
+                                  .update_fetchhead(true)
+                                  .download_tags(AutotagOption::All)),
+                             Some("pull"))?;
+
+                repo.revparse_single(&format!("origin/{}", src.rev))
+            })
             .expect("Fluidlite git revision should exist");
 
         repo.checkout_tree(&rev, None)

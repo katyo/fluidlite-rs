@@ -1437,6 +1437,7 @@ pub struct _fluid_rampreset_t {
     _unused: [u8; 0],
 }
 pub type fluid_rampreset_t = _fluid_rampreset_t;
+pub type fluid_fileapi_t = _fluid_fileapi_t;
 pub type fluid_istream_t = ::std::os::raw::c_int;
 pub type fluid_ostream_t = ::std::os::raw::c_int;
 pub const fluid_types_enum_FLUID_NO_TYPE: fluid_types_enum = -1;
@@ -2383,6 +2384,8 @@ pub type _bindgen_ty_1 = u32;
 pub struct _fluid_sfloader_t {
     #[doc = " Private data"]
     pub data: *mut ::std::os::raw::c_void,
+    #[doc = " Callback structure specifying file operations used during soundfont loading to allow custom loading, such as from memory"]
+    pub fileapi: *const fluid_fileapi_t,
     #[doc = " The free must free the memory allocated for the loader in"]
     #[doc = " addition to any private data. It should return 0 if no error"]
     #[doc = " occured, non-zero otherwise."]
@@ -2401,7 +2404,7 @@ pub struct _fluid_sfloader_t {
 fn bindgen_test_layout__fluid_sfloader_t() {
     assert_eq!(
         ::std::mem::size_of::<_fluid_sfloader_t>(),
-        24usize,
+        32usize,
         concat!("Size of: ", stringify!(_fluid_sfloader_t))
     );
     assert_eq!(
@@ -2420,8 +2423,18 @@ fn bindgen_test_layout__fluid_sfloader_t() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).free as *const _ as usize },
+        unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).fileapi as *const _ as usize },
         8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_sfloader_t),
+            "::",
+            stringify!(fileapi)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).free as *const _ as usize },
+        16usize,
         concat!(
             "Offset of field: ",
             stringify!(_fluid_sfloader_t),
@@ -2431,7 +2444,7 @@ fn bindgen_test_layout__fluid_sfloader_t() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).load as *const _ as usize },
-        16usize,
+        24usize,
         concat!(
             "Offset of field: ",
             stringify!(_fluid_sfloader_t),
@@ -2439,6 +2452,122 @@ fn bindgen_test_layout__fluid_sfloader_t() {
             stringify!(load)
         )
     );
+}
+#[doc = " File callback structure to enable custom soundfont loading (e.g. from memory)."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _fluid_fileapi_t {
+    #[doc = " Opens the file or memory indicated by \\c filename in binary read mode."]
+    #[doc = " \\c filename matches the one provided during the fluid_synth_sfload() call."]
+    #[doc = ""]
+    #[doc = " @return returns a file handle on success, NULL otherwise"]
+    pub fopen: ::std::option::Option<
+        unsafe extern "C" fn(
+            loader: *mut fluid_sfloader_t,
+            filename: *const ::std::os::raw::c_char,
+        ) -> *mut ::std::os::raw::c_void,
+    >,
+    #[doc = " Reads \\c count bytes to the specified buffer \\c buf."]
+    #[doc = ""]
+    #[doc = " @return returns #FLUID_OK if exactly \\c count bytes were successfully read, else #FLUID_FAILED"]
+    pub fread: ::std::option::Option<
+        unsafe extern "C" fn(
+            buf: *mut ::std::os::raw::c_void,
+            count: ::std::os::raw::c_int,
+            handle: *mut ::std::os::raw::c_void,
+        ) -> ::std::os::raw::c_int,
+    >,
+    #[doc = " Same purpose and behaviour as fseek."]
+    #[doc = ""]
+    #[doc = " @param origin either \\c SEEK_SET, \\c SEEK_CUR or \\c SEEK_END"]
+    #[doc = ""]
+    #[doc = " @return returns #FLUID_OK if the seek was successfully performed while not seeking beyond a buffer or file, #FLUID_FAILED otherwise"]
+    pub fseek: ::std::option::Option<
+        unsafe extern "C" fn(
+            handle: *mut ::std::os::raw::c_void,
+            offset: ::std::os::raw::c_long,
+            origin: ::std::os::raw::c_int,
+        ) -> ::std::os::raw::c_int,
+    >,
+    #[doc = " Closes the handle and frees used ressources."]
+    #[doc = ""]
+    #[doc = " @return returns #FLUID_OK on success, #FLUID_FAILED on error"]
+    pub fclose: ::std::option::Option<
+        unsafe extern "C" fn(handle: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_int,
+    >,
+    #[doc = " @return returns current file offset or #FLUID_FAILED on error"]
+    pub ftell: ::std::option::Option<
+        unsafe extern "C" fn(handle: *mut ::std::os::raw::c_void) -> ::std::os::raw::c_long,
+    >,
+}
+#[test]
+fn bindgen_test_layout__fluid_fileapi_t() {
+    assert_eq!(
+        ::std::mem::size_of::<_fluid_fileapi_t>(),
+        40usize,
+        concat!("Size of: ", stringify!(_fluid_fileapi_t))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<_fluid_fileapi_t>(),
+        8usize,
+        concat!("Alignment of ", stringify!(_fluid_fileapi_t))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_fileapi_t>())).fopen as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_fileapi_t),
+            "::",
+            stringify!(fopen)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_fileapi_t>())).fread as *const _ as usize },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_fileapi_t),
+            "::",
+            stringify!(fread)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_fileapi_t>())).fseek as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_fileapi_t),
+            "::",
+            stringify!(fseek)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_fileapi_t>())).fclose as *const _ as usize },
+        24usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_fileapi_t),
+            "::",
+            stringify!(fclose)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_fileapi_t>())).ftell as *const _ as usize },
+        32usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_fileapi_t),
+            "::",
+            stringify!(ftell)
+        )
+    );
+}
+extern "C" {
+    pub fn new_fluid_defsfloader() -> *mut fluid_sfloader_t;
+}
+extern "C" {
+    pub fn delete_fluid_defsfloader(loader: *mut fluid_sfloader_t) -> ::std::os::raw::c_int;
 }
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
