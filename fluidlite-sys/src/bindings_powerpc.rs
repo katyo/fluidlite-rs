@@ -141,9 +141,9 @@ pub const FLUID_SAMPLETYPE_OGG_VORBIS: u32 = 16;
 pub const FLUID_SAMPLETYPE_OGG_VORBIS_UNPACKED: u32 = 32;
 pub const FLUID_SAMPLETYPE_ROM: u32 = 32768;
 pub const FLUID_NUM_MOD: u32 = 64;
-pub const FLUIDSYNTH_VERSION: &'static [u8; 6usize] = b"1.1.0\0";
+pub const FLUIDSYNTH_VERSION: &'static [u8; 6usize] = b"1.2.0\0";
 pub const FLUIDSYNTH_VERSION_MAJOR: u32 = 1;
-pub const FLUIDSYNTH_VERSION_MINOR: u32 = 1;
+pub const FLUIDSYNTH_VERSION_MINOR: u32 = 2;
 pub const FLUIDSYNTH_VERSION_MICRO: u32 = 0;
 pub type __u_char = ::std::os::raw::c_uchar;
 pub type __u_short = ::std::os::raw::c_ushort;
@@ -2384,8 +2384,6 @@ pub type _bindgen_ty_1 = u32;
 pub struct _fluid_sfloader_t {
     #[doc = " Private data"]
     pub data: *mut ::std::os::raw::c_void,
-    #[doc = " Callback structure specifying file operations used during soundfont loading to allow custom loading, such as from memory"]
-    pub fileapi: *const fluid_fileapi_t,
     #[doc = " The free must free the memory allocated for the loader in"]
     #[doc = " addition to any private data. It should return 0 if no error"]
     #[doc = " occured, non-zero otherwise."]
@@ -2399,6 +2397,8 @@ pub struct _fluid_sfloader_t {
             filename: *const ::std::os::raw::c_char,
         ) -> *mut fluid_sfont_t,
     >,
+    #[doc = " Callback structure specifying file operations used during soundfont loading to allow custom loading, such as from memory"]
+    pub fileapi: *const fluid_fileapi_t,
 }
 #[test]
 fn bindgen_test_layout__fluid_sfloader_t() {
@@ -2423,18 +2423,8 @@ fn bindgen_test_layout__fluid_sfloader_t() {
         )
     );
     assert_eq!(
-        unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).fileapi as *const _ as usize },
-        4usize,
-        concat!(
-            "Offset of field: ",
-            stringify!(_fluid_sfloader_t),
-            "::",
-            stringify!(fileapi)
-        )
-    );
-    assert_eq!(
         unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).free as *const _ as usize },
-        8usize,
+        4usize,
         concat!(
             "Offset of field: ",
             stringify!(_fluid_sfloader_t),
@@ -2444,12 +2434,22 @@ fn bindgen_test_layout__fluid_sfloader_t() {
     );
     assert_eq!(
         unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).load as *const _ as usize },
-        12usize,
+        8usize,
         concat!(
             "Offset of field: ",
             stringify!(_fluid_sfloader_t),
             "::",
             stringify!(load)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<_fluid_sfloader_t>())).fileapi as *const _ as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(_fluid_sfloader_t),
+            "::",
+            stringify!(fileapi)
         )
     );
 }
