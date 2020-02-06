@@ -10,17 +10,11 @@ readme = "README.md"
 repository = "https://github.com/katyo/fluidlite-rs"
 edition = "2018"
 
-[build-dependencies.git2]
-version = "^0.11"
-optional = true
+[badges]
+travis-ci = { repository = "katyo/fluidlite-rs" }
 
-[build-dependencies.serde]
-version = "^1"
-features = ["derive"]
-optional = true
-
-[build-dependencies.toml]
-version = "^0.5"
+[build-dependencies.fetch_unroll]
+version = "^0.2"
 optional = true
 
 [build-dependencies.bindgen]
@@ -28,12 +22,8 @@ version = "0.52"
 optional = true
 
 [features]
-generate-bindings = ["git2", "serde", "toml", "bindgen"]
+generate-bindings = ["fetch_unroll", "bindgen"]
 rustdoc = []
-
-[package.metadata.source]
-git = "https://github.com/katyo/FluidLite"
-rev = "custom-file-api"
 
 [package.metadata.docs.rs]
 features = ["rustdoc"]

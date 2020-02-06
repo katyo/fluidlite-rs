@@ -10,6 +10,9 @@ readme = "README.md"
 repository = "https://github.com/katyo/fluidlite-rs"
 edition = "2018"
 
+[badges]
+travis-ci = { repository = "katyo/fluidlite-rs" }
+
 [dependencies.fluidlite-sys]
 path = "../fluidlite-sys"
 

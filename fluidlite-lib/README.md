@@ -37,3 +37,4 @@ You can apply some customizations to library using those features:
 
 - __shared__ Force bundle shared (or dynamic) library instead of static
 - __with-sf3__ Enable SoundFont3 support which requires ogg/vorbis (system-wide or bundled)
+- __with-stb__ Use __stb-vorbis__ instead of Xiph's libogg/libvorbis

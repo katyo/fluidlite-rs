@@ -61,6 +61,6 @@ mod tests {
 
         let version = unsafe { [major.assume_init(), minor.assume_init(), micro.assume_init()] };
 
-        assert_eq!(&version, &[1, 1, 0]);
+        assert_eq!(&version, &[1, 2, 0]);
     }
 }
