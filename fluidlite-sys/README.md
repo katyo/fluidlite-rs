@@ -5,6 +5,6 @@
 [![Docs.rs API Docs](https://docs.rs/fluidlite-sys/badge.svg)](https://docs.rs/fluidlite-sys)
 [![Travis-CI Status](https://travis-ci.com/katyo/fluidlite-rs.svg?branch=master)](https://travis-ci.com/katyo/fluidlite-rs)
 
-This crate provides generated unsafe Rust bindings to [fluidlite](https://github.com/divideconcept/FluidLite) C library.
+This crate provides generated unsafe Rust bindings to [fluidlite](https://github.com/katyo/fluidlite) C library.
 
 Probably this isn't that you really need. See [safe bindings](https://crates.io/crates/fluidlite).

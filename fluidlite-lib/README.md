@@ -5,7 +5,7 @@
 [![Docs.rs API Docs](https://docs.rs/fluidlite-lib/badge.svg)](https://docs.rs/fluidlite-lib)
 [![Travis-CI Status](https://travis-ci.com/katyo/fluidlite-rs.svg?branch=master)](https://travis-ci.com/katyo/fluidlite-rs)
 
-This crate provides bundled [fluidlite](https://github.com/divideconcept/FluidLite) C library
+This crate provides bundled [fluidlite](https://github.com/katyo/fluidlite) C library
 for using with [__fluidlite__](https://crates.io/crates/fluidlite) crate in case
 when system-wide library is not available.
 

@@ -1,7 +1,7 @@
 /*!
 # Bundled fluidlite library
 
-This crate provides bundled [fluidlite](https://github.com/divideconcept/FluidLite) C library
+This crate provides bundled [fluidlite](https://github.com/katyo/fluidlite) C library
 for using with [__fluidlite__](https://crates.io/crates/fluidlite) crate in case
 when system-wide library is not available.
 

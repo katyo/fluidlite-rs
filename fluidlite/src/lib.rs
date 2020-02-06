@@ -1,7 +1,7 @@
 /*!
 # Rust fluidlite bindings
 
-This project aims provide safe Rust bindings to [fluidlite](https://github.com/divideconcept/FluidLite) C library.
+This project aims provide safe Rust bindings to [fluidlite](https://github.com/katyo/fluidlite) C library.
 
 > FluidLite is a very light version of FluidSynth designed to be hardware,
 > platform and external dependency independant. It only uses standard C libraries.

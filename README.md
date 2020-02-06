@@ -17,7 +17,7 @@
 > therefore MIDI file reading, realtime MIDI events and audio output
 > must be implemented externally.
 
-This project aims provide safe Rust bindings to [fluidlite](https://github.com/divideconcept/FluidLite) C library.
+This project aims provide safe Rust bindings to [fluidlite](https://github.com/katyo/fluidlite) C library.
 
 ## Crates
 
