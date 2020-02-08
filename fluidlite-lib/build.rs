@@ -21,28 +21,24 @@ fn main() {
         let src_dir = out_dir.join("source")
             .join(&src.version);
 
-        let src_dir = utils::fetch_source(&src, &src_dir);
+        utils::fetch_source(&src, &src_dir);
 
         utils::compile_library(&src_dir);
     }
 }
 
 mod utils {
-    use std::path::{Path, PathBuf};
+    use std::path::Path;
 
     pub struct Source {
         pub repository: String,
         pub version: String,
     }
 
-    pub fn fetch_source(src: &Source, out_dir: &Path) -> PathBuf {
-        use std::fs::{metadata, create_dir_all};
-        use fetch_unroll::fetch_unroll;
+    pub fn fetch_source(src: &Source, out_dir: &Path) {
+        use fetch_unroll::Fetch;
 
-        if !metadata(&out_dir)
-            .map(|meta| meta.is_dir())
-            .unwrap_or(false)
-        {
+        if !out_dir.is_dir() {
             let src_url = format!("{repo}/archive/{ver}.tar.gz",
                                   repo = src.repository,
                                   ver = src.version);
@@ -50,28 +46,8 @@ mod utils {
             eprintln!("Fetch fluidlite from {} to {}",
                       src_url, out_dir.display());
 
-            create_dir_all(&out_dir.parent().unwrap())
-                .expect("Output directory should be created.");
-
-            fetch_unroll(src_url, out_dir)
+            Fetch::from(src_url).unroll().strip_components(1).to(out_dir)
                 .expect("FluidLite sources should be fetched.");
-        }
-
-        let mut sub_dirs = out_dir.read_dir()
-            .expect("Sources directory should be readable.");
-
-        match (sub_dirs.next(), sub_dirs.next()) {
-            // Single subdirectory
-            (Some(sub_dir), None) => {
-                let sub_dir = sub_dir.unwrap().path();
-
-                if sub_dir.is_dir() {
-                    return sub_dir.to_owned();
-                } else {
-                    panic!("Invalid source contents");
-                }
-            },
-            _ => out_dir.to_owned(),
         }
     }
 
