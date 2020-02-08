@@ -13,11 +13,13 @@ edition = "2018"
 [badges]
 travis-ci = { repository = "katyo/fluidlite-rs" }
 
+[dependencies]
+bitflags = "^1.2"
+num-traits = "^0.2"
+num-derive = "^0.3"
+
 [dependencies.fluidlite-sys]
 path = "../fluidlite-sys"
-
-[dependencies.bitflags]
-version = "^1.2"
 
 [dev-dependencies.fluidlite-lib]
 path = "../fluidlite-lib"
