@@ -1,0 +1,32 @@
+language: rust
+rust:
+- stable
+- beta
+- nightly
+os:
+- linux
+- osx
+- windows
+cache: cargo
+script:
+- |
+  cd fluidlite-sys
+  cargo test --release
+  cd -
+- |
+  cd fluidlite-lib
+  cargo test --release
+  cargo test --release --features with-sf3
+  cargo test --release --features with-sf3,with-stb
+  cd -
+- |
+  cd fluidlite
+  cargo test --release
+  cd -
+jobs:
+  allow_failures:
+  - rust: nightly
+  include:
+  - stage: publish
+    script: cargo publish
+    if: (type = push) && (tag =~ ^[0-9])
