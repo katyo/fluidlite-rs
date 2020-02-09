@@ -27,4 +27,4 @@ This project aims provide safe Rust bindings to [fluidlite](https://github.com/d
 
 ## Features
 
-* __generate-bindings__ Force generate bindings itself instead of use pre-generated
+* __generate-bindings__ Force generate bindings on build instead of using pre-generated

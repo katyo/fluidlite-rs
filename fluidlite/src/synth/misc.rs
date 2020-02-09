@@ -1,5 +1,5 @@
 use std::ffi::CStr;
-use crate::{ffi, Synth, Result, Status};
+use crate::{ffi, Synth, Result, Status, Error};
 
 impl Synth {
     /**
@@ -13,7 +13,7 @@ impl Synth {
 
     pub(super) fn neg_err(&self, ret: i32) -> Result<i32> {
         if ret < 0 {
-            Err(self.error())
+            Err(Error::Fluid(self.error()))
         } else {
             Ok(ret)
         }
@@ -23,7 +23,7 @@ impl Synth {
         if ret == 0 {
             Ok(())
         } else {
-            Err(self.error())
+            Err(Error::Fluid(self.error()))
         }
     }
 }

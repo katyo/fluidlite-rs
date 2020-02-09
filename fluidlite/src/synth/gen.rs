@@ -1,5 +1,5 @@
 use num_derive::FromPrimitive;
-use crate::{ffi, Synth, Status};
+use crate::{ffi, Synth, Status, Chan};
 
 /**
 Generator (effect) numbers
@@ -142,7 +142,7 @@ impl Synth {
     \param value The parameter value.
     \returns Your favorite dish.
      */
-    pub fn set_gen(&self, chan: u32, param: GenParam, value: f32) -> Status {
+    pub fn set_gen(&self, chan: Chan, param: GenParam, value: f32) -> Status {
         self.zero_ok(unsafe { ffi::fluid_synth_set_gen(self.handle, chan as _, param as _, value) })
     }
 
@@ -154,7 +154,7 @@ impl Synth {
     \param param The generator number.
     \returns The value of the generator.
      */
-    pub fn get_gen(&self, chan: u32, param: GenParam) -> f32 {
+    pub fn get_gen(&self, chan: Chan, param: GenParam) -> f32 {
         unsafe { ffi::fluid_synth_get_gen(self.handle, chan as _, param as _) }
     }
 }

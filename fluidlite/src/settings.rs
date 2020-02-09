@@ -1,12 +1,12 @@
 use std::{
     marker::PhantomData,
     os::raw,
-    mem::MaybeUninit,
-    ffi::CStr,
+    mem::{MaybeUninit, transmute},
+    ffi::{CString, CStr},
     ops::{Bound, RangeBounds},
 };
 use bitflags::bitflags;
-use crate::ffi;
+use crate::{ffi, Result, result_from_ptr};
 
 /**
 The generic settings object
@@ -16,73 +16,133 @@ pub struct Settings {
     handle: *mut ffi::fluid_settings_t,
 }
 
-impl Default for Settings {
-    fn default() -> Self {
-        let handle = unsafe { ffi::new_fluid_settings() };
+unsafe impl Send for Settings {}
 
-        assert!(!handle.is_null());
-
-        Self { handle }
-    }
+/**
+The settings reference
+*/
+#[repr(transparent)]
+pub struct SettingsRef<'a> {
+    handle: *mut ffi::fluid_settings_t,
+    phantom: PhantomData<&'a ()>,
 }
 
 impl Drop for Settings {
     fn drop(&mut self) {
-        unsafe { ffi::delete_fluid_settings(self.handle); }
+        unsafe { ffi::delete_fluid_settings(self.handle) }
     }
 }
 
 impl Settings {
-    pub(crate) fn ptr(&self) -> *mut ffi::fluid_settings_t {
-        self.handle
+    pub fn new() -> Result<Self> {
+        result_from_ptr(unsafe { ffi::new_fluid_settings() })
+            .map(|handle| Self { handle })
     }
 
-    /*pub(crate) fn into_ptr(self) -> *mut ffi::fluid_settings_t {
-        self.handle
-    }*/
-
-    pub fn pick<'a: 's, 's, S, T>(&'a self, name: S) -> Option<Setting<'s, T>>
-    where
-        S: Into<String>,
-        T: IsSetting + ?Sized,
-    {
-        let mut name = name.into();
-        name.push('\0');
-        T::new(self, name)
+    pub(crate) fn into_ptr(self) -> *mut ffi::fluid_settings_t {
+        unsafe { transmute(self) }
     }
 
-    pub fn str_<'a: 's, 's, S>(&'a self, name: S) -> Option<Setting<'s, str>>
+    pub(crate) fn from_ptr(handle: *mut ffi::fluid_settings_t) -> Self {
+        Self { handle }
+    }
+}
+
+impl<'a> SettingsRef<'a> {
+    pub(crate) fn from_ptr(handle: *mut ffi::fluid_settings_t) -> Self {
+        Self { handle, phantom: PhantomData }
+    }
+}
+
+pub trait IsSettings {
+    fn pick<S, T>(&self, name: S) -> Option<Setting<'_, T>>
     where
-        S: Into<String>,
-    {
-        self.pick(name)
+        S: Into<Vec<u8>>,
+        T: IsSetting + ?Sized;
+
+    fn str_<S>(&self, name: S) -> Option<Setting<'_, str>>
+    where
+        S: Into<Vec<u8>>;
+
+    fn num<S>(&self, name: S) -> Option<Setting<'_, f64>>
+    where
+        S: Into<Vec<u8>>;
+
+    fn int<S>(&self, name: S) -> Option<Setting<'_, i32>>
+    where
+        S: Into<Vec<u8>>;
+}
+
+mod private {
+    use std::{
+        ffi::CString,
+        marker::PhantomData,
+    };
+    use super::{ffi, IsSettings, IsSetting, Setting, Settings, SettingsRef};
+
+    pub trait HasHandle {
+        type Handle;
+
+        fn get_handle(&self) -> *mut Self::Handle;
     }
 
-    pub fn num<'a: 's, 's, S>(&'a self, name: S) -> Option<Setting<'s, f64>>
-    where
-        S: Into<String>,
-    {
-        self.pick(name)
+    impl<X> IsSettings for X where X: HasHandle<Handle = ffi::fluid_settings_t> {
+        fn pick<S, T>(&self, name: S) -> Option<Setting<'_, T>>
+        where
+            S: Into<Vec<u8>>,
+            T: IsSetting + ?Sized,
+        {
+            let handle = self.get_handle();
+            let name = CString::new(name).ok()?;
+
+            if T::TYPE == unsafe { ffi::fluid_settings_get_type(handle, name.as_ptr() as *const _) } {
+                Some(Setting { handle, name, phantom: PhantomData })
+            } else {
+                None
+            }
+        }
+
+        fn str_<S>(&self, name: S) -> Option<Setting<'_, str>>
+        where
+            S: Into<Vec<u8>>,
+        {
+            self.pick(name)
+        }
+
+        fn num<S>(&self, name: S) -> Option<Setting<'_, f64>>
+        where
+            S: Into<Vec<u8>>,
+        {
+            self.pick(name)
+        }
+
+        fn int<S>(&self, name: S) -> Option<Setting<'_, i32>>
+        where
+            S: Into<Vec<u8>>,
+        {
+            self.pick(name)
+        }
     }
 
-    pub fn int<'a: 's, 's, S>(&'a self, name: S) -> Option<Setting<'s, i32>>
-    where
-        S: Into<String>,
-    {
-        self.pick(name)
+    impl HasHandle for Settings {
+        type Handle = ffi::fluid_settings_t;
+
+        fn get_handle(&self) -> *mut Self::Handle {
+            self.handle
+        }
+    }
+
+    impl<'a> HasHandle for SettingsRef<'a> {
+        type Handle = ffi::fluid_settings_t;
+
+        fn get_handle(&self) -> *mut Self::Handle {
+            self.handle
+        }
     }
 }
 
 pub trait IsSetting {
     const TYPE: ffi::fluid_types_enum;
-
-    fn new<'a: 's, 's>(settings: &'a Settings, name: String) -> Option<Setting<'s, Self>> {
-        if Self::TYPE == unsafe { ffi::fluid_settings_get_type(settings.handle, name.as_ptr() as *const _) } {
-            Some(Setting { settings, name, phantom: PhantomData })
-        } else {
-            None
-        }
-    }
 }
 
 impl IsSetting for str {
@@ -172,38 +232,33 @@ bitflags! {
 /**
 The single setting of specific type
  */
-pub struct Setting<'s, T: ?Sized> {
-    settings: &'s Settings,
-    name: String,
-    phantom: PhantomData<T>
+pub struct Setting<'a, T: ?Sized> {
+    handle: *mut ffi::fluid_settings_t,
+    name: CString,
+    phantom: PhantomData<(&'a (), T)>
 }
 
-impl<'s, T> Setting<'s, T>
+impl<'a, T> Setting<'a, T>
 where
     T: ?Sized,
 {
-    #[inline]
-    fn settings_ptr(&self) -> *mut ffi::fluid_settings_t {
-        self.settings.handle
-    }
-
     #[inline]
     fn name_ptr(&self) -> *const raw::c_char {
         self.name.as_ptr() as *const _
     }
 
     pub fn hints(&self) -> Hints {
-        Hints::from_bits_truncate(unsafe { ffi::fluid_settings_get_hints(self.settings_ptr(), self.name_ptr()) })
+        Hints::from_bits_truncate(unsafe { ffi::fluid_settings_get_hints(self.handle, self.name_ptr()) })
     }
 
     /** Returns whether the setting is changeable in real-time
      */
     pub fn is_realtime(&self) -> bool {
-        0 < unsafe { ffi::fluid_settings_is_realtime(self.settings_ptr(), self.name_ptr()) }
+        0 < unsafe { ffi::fluid_settings_is_realtime(self.handle, self.name_ptr()) }
     }
 }
 
-impl<'s> Setting<'s, str> {
+impl<'a> Setting<'a, str> {
     /**
     Set the value of a string setting
 
@@ -212,7 +267,7 @@ impl<'s> Setting<'s, str> {
     pub fn set<S: Into<String>>(&self, value: S) -> bool {
         let mut value = value.into();
         value.push('\0');
-        0 < unsafe { ffi::fluid_settings_setstr(self.settings_ptr(), self.name_ptr(), value.as_ptr() as *const _) }
+        0 < unsafe { ffi::fluid_settings_setstr(self.handle, self.name_ptr(), value.as_ptr() as *const _) }
     }
 
     /**
@@ -223,7 +278,7 @@ impl<'s> Setting<'s, str> {
     pub fn get(&self) -> Option<&str> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getstr(self.settings_ptr(), self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe { ffi::fluid_settings_getstr(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
             let value = unsafe { value.assume_init() };
             let value = unsafe { CStr::from_ptr(value) };
             value.to_str().ok()
@@ -236,20 +291,20 @@ impl<'s> Setting<'s, str> {
     Get the default value of a string setting
      */
     pub fn default(&self) -> &str {
-        let value = unsafe { ffi::fluid_settings_getstr_default(self.settings_ptr(), self.name_ptr()) };
+        let value = unsafe { ffi::fluid_settings_getstr_default(self.handle, self.name_ptr()) };
         let value = unsafe { CStr::from_ptr(value) };
         value.to_str().unwrap()
     }
 }
 
-impl<'s, S> PartialEq<S> for Setting<'s, str>
+impl<'a, S> PartialEq<S> for Setting<'a, str>
 where
     S: AsRef<str>,
 {
     fn eq(&self, other: &S) -> bool {
         let mut other = String::from(other.as_ref());
         other.push('\0');
-        0 < unsafe { ffi::fluid_settings_str_equal(self.settings_ptr(), self.name_ptr(), other.as_ptr() as *mut _) }
+        0 < unsafe { ffi::fluid_settings_str_equal(self.handle, self.name_ptr(), other.as_ptr() as *mut _) }
     }
 }
 
@@ -303,14 +358,14 @@ impl<T> RangeBounds<T> for Range<T> {
     }
 }
 
-impl<'s> Setting<'s, f64> {
+impl<'a> Setting<'a, f64> {
     /**
     Set the value of a numeric setting
 
     Returns `true` if the value has been set, `false` otherwise
      */
     pub fn set(&self, value: f64) -> bool {
-        0 < unsafe { ffi::fluid_settings_setnum(self.settings_ptr(), self.name_ptr(), value) }
+        0 < unsafe { ffi::fluid_settings_setnum(self.handle, self.name_ptr(), value) }
     }
 
     /**
@@ -321,7 +376,7 @@ impl<'s> Setting<'s, f64> {
     pub fn get(&self) -> Option<f64> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getnum(self.settings_ptr(), self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe { ffi::fluid_settings_getnum(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
             let value = unsafe { value.assume_init() };
             Some(value)
         } else {
@@ -333,7 +388,7 @@ impl<'s> Setting<'s, f64> {
     Get the default value of a numeric setting
      */
     pub fn default(&self) -> f64 {
-        unsafe { ffi::fluid_settings_getnum_default(self.settings_ptr(), self.name_ptr()) }
+        unsafe { ffi::fluid_settings_getnum_default(self.handle, self.name_ptr()) }
     }
 
     /**
@@ -343,21 +398,21 @@ impl<'s> Setting<'s, f64> {
         let mut min = MaybeUninit::uninit();
         let mut max = MaybeUninit::uninit();
 
-        unsafe { ffi::fluid_settings_getnum_range(self.settings_ptr(), self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
+        unsafe { ffi::fluid_settings_getnum_range(self.handle, self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
 
         let hints = self.hints();
         Range::new_unsafe(min, max, hints)
     }
 }
 
-impl<'s> Setting<'s, i32> {
+impl<'a> Setting<'a, i32> {
     /**
     Set the value of a integer setting
 
     Returns `true` if the value has been set, `false` otherwise
      */
     pub fn set(&self, value: i32) -> bool {
-        0 < unsafe { ffi::fluid_settings_setint(self.settings_ptr(), self.name_ptr(), value) }
+        0 < unsafe { ffi::fluid_settings_setint(self.handle, self.name_ptr(), value) }
     }
 
     /**
@@ -368,7 +423,7 @@ impl<'s> Setting<'s, i32> {
     pub fn get(&self) -> Option<i32> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getint(self.settings_ptr(), self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe { ffi::fluid_settings_getint(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
             let value = unsafe { value.assume_init() };
             Some(value)
         } else {
@@ -380,7 +435,7 @@ impl<'s> Setting<'s, i32> {
     Get the default value of a integer setting
      */
     pub fn default(&self) -> i32 {
-        unsafe { ffi::fluid_settings_getint_default(self.settings_ptr(), self.name_ptr()) }
+        unsafe { ffi::fluid_settings_getint_default(self.handle, self.name_ptr()) }
     }
 
     /**
@@ -390,7 +445,7 @@ impl<'s> Setting<'s, i32> {
         let mut min = MaybeUninit::uninit();
         let mut max = MaybeUninit::uninit();
 
-        unsafe { ffi::fluid_settings_getint_range(self.settings_ptr(), self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
+        unsafe { ffi::fluid_settings_getint_range(self.handle, self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
 
         let hints = self.hints();
         Range::new_unsafe(min, max, hints)
@@ -403,14 +458,14 @@ mod test {
 
     #[test]
     fn settings() {
-        let settings = Settings::default();
+        let settings = Settings::new().unwrap();
 
         drop(settings);
     }
 
     #[test]
     fn num_setting() {
-        let settings = Settings::default();
+        let settings = Settings::new().unwrap();
         let gain = settings.num("synth.gain").unwrap();
 
         assert_eq!(gain.default(), 0.2f32 as f64);
@@ -424,7 +479,7 @@ mod test {
 
     #[test]
     fn int_setting() {
-        let settings = Settings::default();
+        let settings = Settings::new().unwrap();
         let polyphony = settings.int("synth.polyphony").unwrap();
 
         assert_eq!(polyphony.default(), 256);
@@ -436,11 +491,15 @@ mod test {
         assert_eq!(polyphony.get(), Some(512));
     }
 
-    /*#[test]
+    #[test]
     fn str_setting() {
-        let settings = Settings::default();
-        let bank = settings.str_("synth.midi-bank-select").unwrap();
+        let settings = Settings::new().unwrap();
+        let active = settings.str_("synth.drums-channel.active").unwrap();
 
-        assert_eq!(bank.default(), "gs");
-    }*/
+        assert_eq!(active.default(), "yes");
+
+        assert_eq!(active.get(), Some("yes"));
+        assert!(active.set("no"));
+        assert_eq!(active.get(), Some("no"));
+    }
 }

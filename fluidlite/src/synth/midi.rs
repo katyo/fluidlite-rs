@@ -1,5 +1,5 @@
 use std::mem::MaybeUninit;
-use crate::{Synth, Result, Status, ffi};
+use crate::{Synth, Result, Status, Chan, Key, Vel, Ctrl, Val, Prog, Bank, FontId, PresId, ffi};
 
 /**
 MIDI channel messages
@@ -7,122 +7,92 @@ MIDI channel messages
 impl Synth {
     /**
     Send a noteon message.
-
-    Returns `true` if no error occurred, `false` otherwise.
      */
-    pub fn noteon(&self, chan: i32, key: i32, vel: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_noteon(self.handle, chan, key, vel) })
+    pub fn note_on(&self, chan: Chan, key: Key, vel: Vel) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_noteon(self.handle, chan as _, key as _, vel as _) })
     }
 
     /**
     Send a noteoff message.
-
-    Returns `true` if no error occurred, `false` otherwise.
      */
-    pub fn noteoff(&self, chan: i32, key: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_noteoff(self.handle, chan, key) })
+    pub fn note_off(&self, chan: Chan, key: Key) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_noteoff(self.handle, chan as _, key as _) })
     }
 
     /**
     Send a control change message.
-
-    Returns `true` if no error occurred, `false` otherwise.
      */
-    pub fn cc(&self, chan: i32, ctrl: i32, val: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_cc(self.handle, chan, ctrl, val) })
+    pub fn cc(&self, chan: Chan, ctrl: Ctrl, val: Val) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_cc(self.handle, chan as _, ctrl as _, val as _) })
     }
 
     /**
     Get a control value.
-
-    Returns `Some(value)` if no error occurred, `None` otherwise.
      */
-    pub fn get_cc(&self, chan: i32, ctrl: i32) -> Result<i32> {
+    pub fn get_cc(&self, chan: Chan, ctrl: Ctrl) -> Result<Val> {
         let mut val = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_cc(self.handle, chan, ctrl, val.as_mut_ptr()) })
-            .map(|_| unsafe { val.assume_init() })
+        self.zero_ok(unsafe { ffi::fluid_synth_get_cc(self.handle, chan as _, ctrl as _, val.as_mut_ptr()) })
+            .map(|_| unsafe { val.assume_init() as _ })
     }
 
     /**
     Send a pitch bend message.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn pitch_bend(&self, chan: i32, val: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_pitch_bend(self.handle, chan, val) })
+    pub fn pitch_bend(&self, chan: Chan, val: Val) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_pitch_bend(self.handle, chan as _, val as _) })
     }
 
     /**
     Get the pitch bend value.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn get_pitch_bend(&self, chan: i32) -> Result<i32> {
+    pub fn get_pitch_bend(&self, chan: Chan) -> Result<Val> {
         let mut pitch_bend = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_bend(self.handle, chan, pitch_bend.as_mut_ptr()) })
-            .map(|_| unsafe { pitch_bend.assume_init() })
+        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_bend(self.handle, chan as _, pitch_bend.as_mut_ptr()) })
+            .map(|_| unsafe { pitch_bend.assume_init() as _ })
     }
 
     /**
     Set the pitch wheel sensitivity.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn pitch_wheel_sens(&self, chan: i32, val: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_pitch_wheel_sens(self.handle, chan, val) })
+    pub fn pitch_wheel_sens(&self, chan: Chan, val: Val) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_pitch_wheel_sens(self.handle, chan as _, val as _) })
     }
 
     /**
     Get the pitch wheel sensitivity.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn get_pitch_wheel_sens(&self, chan: i32) -> Result<i32> {
+    pub fn get_pitch_wheel_sens(&self, chan: Chan) -> Result<Val> {
         let mut val = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_wheel_sens(self.handle, chan, val.as_mut_ptr()) })
-            .map(|_| unsafe { val.assume_init() })
+        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_wheel_sens(self.handle, chan as _, val.as_mut_ptr()) })
+            .map(|_| unsafe { val.assume_init() as _ })
     }
 
     /**
     Send a program change message.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn program_change(&self, chan: i32, program: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_program_change(self.handle, chan, program) })
+    pub fn program_change(&self, chan: Chan, prog: Prog) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_program_change(self.handle, chan as _, prog as _) })
     }
 
-    pub fn channel_pressure(&self, chan: i32, val: i32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_channel_pressure(self.handle, chan, val) })
+    pub fn channel_pressure(&self, chan: Chan, val: Val) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_channel_pressure(self.handle, chan as _, val as _) })
     }
-
-    /*pub fn sysex(&self, data: &str, dryrun: bool) -> bool {
-        if 0 == unsafe { fluid_synth_sysex(self.handle, const char *data, int len,
-                                           char *response, int *response_len, int *handled, int dryrun) } {
-
-        } else {
-        }
-    }*/
 
     /**
     Select a bank.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn bank_select(&self, chan: i32, bank: u32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_bank_select(self.handle, chan, bank) })
+    pub fn bank_select(&self, chan: Chan, bank: Bank) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_bank_select(self.handle, chan as _, bank) })
     }
 
     /**
     Select a sfont.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn sfont_select(&self, chan: i32, sfont_id: u32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_sfont_select(self.handle, chan, sfont_id) })
+    pub fn sfont_select(&self, chan: Chan, sfont_id: FontId) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_sfont_select(self.handle, chan as _, sfont_id) })
     }
 
     /**
@@ -130,29 +100,21 @@ impl Synth {
     SoundFont ID, the bank number, and the preset number. This
     allows any preset to be selected and circumvents preset masking
     due to previously loaded SoundFonts on the SoundFont stack.
-    \param synth The synthesizer
-    \param chan The channel on which to set the preset
-    \param sfont_id The ID of the SoundFont
-    \param bank_num The bank number
-    \param preset_num The preset number
-    \return 0 if no errors occured, -1 otherwise
      */
-    pub fn program_select(&self, chan: i32, sfont_id: u32, bank_num: u32, preset_num: u32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_program_select(self.handle, chan, sfont_id, bank_num, preset_num) })
+    pub fn program_select(&self, chan: Chan, sfont_id: FontId, bank_num: Bank, preset_num: PresId) -> Status {
+        self.zero_ok(unsafe { ffi::fluid_synth_program_select(self.handle, chan as _, sfont_id, bank_num, preset_num) })
     }
 
     /**
     Returns the program, bank, and SoundFont number of the preset on a given channel.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
-    pub fn get_program(&self, chan: i32) -> Result<(u32, u32, u32)> {
+    pub fn get_program(&self, chan: Chan) -> Result<(FontId, Bank, PresId)> {
         let mut sfont_id = MaybeUninit::uninit();
         let mut bank_num = MaybeUninit::uninit();
         let mut preset_num = MaybeUninit::uninit();
 
         self.zero_ok(unsafe {
-            ffi::fluid_synth_get_program(self.handle, chan,
+            ffi::fluid_synth_get_program(self.handle, chan as _,
 			                                   sfont_id.as_mut_ptr(),
 			                                   bank_num.as_mut_ptr(),
 			                                   preset_num.as_mut_ptr())
@@ -167,8 +129,6 @@ impl Synth {
     Send a bank select and a program change to every channel to reinitialize the preset of the channel.
 
     This function is useful mainly after a SoundFont has been loaded, unloaded or reloaded.
-
-    Returns 0 if no error occurred, -1 otherwise.
      */
     pub fn program_reset(&self) -> Status {
         self.zero_ok(unsafe { ffi::fluid_synth_program_reset(self.handle) })

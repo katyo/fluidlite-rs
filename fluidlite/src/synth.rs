@@ -1,15 +1,17 @@
 mod midi;
 mod low;
 mod sfont;
+mod loader;
 mod reverb;
 mod chorus;
+mod count;
 mod params;
 mod gen;
 mod tuning;
 mod misc;
-//mod write;
+mod write;
 
-use crate::{ffi, Settings};
+use crate::{ffi, Settings, SettingsRef, Result, result_from_ptr};
 
 /**
 The synth object
@@ -28,8 +30,9 @@ The API for sending MIDI events is probably what you expect:
  */
 pub struct Synth {
     handle: *mut ffi::fluid_synth_t,
-    settings: Settings,
 }
+
+unsafe impl Send for Synth {}
 
 impl Synth {
     /**
@@ -37,14 +40,9 @@ impl Synth {
 
     As soon as the synthesizer is created, it will start playing.
      */
-    pub fn new(settings: Settings) -> Option<Self> {
-        let handle = unsafe { ffi::new_fluid_synth(settings.ptr()) };
-
-        if handle.is_null() {
-            return None;
-        }
-
-        Self { handle, settings }.into()
+    pub fn new(settings: Settings) -> Result<Self> {
+        result_from_ptr(unsafe { ffi::new_fluid_synth(settings.into_ptr()) })
+            .map(|handle| Self { handle })
     }
 
     /**
@@ -57,13 +55,74 @@ impl Synth {
     /**
     Get a reference to the settings of the synthesizer.
      */
-    pub fn get_settings(&self) -> &Settings {
-        &self.settings
+    pub fn get_settings(&self) -> SettingsRef<'_> {
+        SettingsRef::from_ptr(unsafe { ffi::fluid_synth_get_settings(self.handle) })
     }
 }
 
 impl Drop for Synth {
     fn drop(&mut self) {
+        let _settings = Settings::from_ptr(unsafe { ffi::fluid_synth_get_settings(self.handle) });
         unsafe { ffi::delete_fluid_synth(self.handle); }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::{
+        io::Write,
+        fs::File,
+    };
+    use byte_slice_cast::AsByteSlice;
+    use super::{Settings, Synth};
+
+    #[test]
+    fn synth_sf2() {
+        let mut pcm = File::create("Boomwhacker.sf2.pcm").unwrap();
+
+        let settings = Settings::new().unwrap();
+
+        let synth = Synth::new(settings).unwrap();
+
+        synth.sfload("../sf_/Boomwhacker.sf2", true).unwrap();
+
+        let mut samples = [0f32; 44100 * 2];
+
+        synth.note_on(0, 60, 127).unwrap();
+
+        synth.write(samples.as_mut()).unwrap();
+        pcm.write(samples.as_byte_slice()).unwrap();
+
+        synth.note_off(0, 60).unwrap();
+
+        synth.write(samples.as_mut()).unwrap();
+        pcm.write(samples.as_byte_slice()).unwrap();
+
+        drop(synth);
+    }
+
+    #[test]
+    fn synth_sf3() {
+        let mut pcm = File::create("Boomwhacker.sf3.pcm").unwrap();
+
+        let settings = Settings::new().unwrap();
+
+        let synth = Synth::new(settings).unwrap();
+
+        synth.sfload("../sf_/Boomwhacker.sf3", true).unwrap();
+
+        let mut samples = [0f32; 44100 * 2];
+
+        synth.note_on(0, 60, 127).unwrap();
+
+        synth.write(samples.as_mut()).unwrap();
+        pcm.write(samples.as_byte_slice()).unwrap();
+
+        synth.note_off(0, 60).unwrap();
+
+        synth.write(samples.as_mut()).unwrap();
+        pcm.write(samples.as_byte_slice()).unwrap();
+
+        drop(synth);
     }
 }

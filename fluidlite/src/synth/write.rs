@@ -1,70 +1,66 @@
 use crate::{ffi, Synth, Status};
 
+/// The trait which implements samples data buffer interface
+pub trait IsSamples {
+    fn write_samples(self, handle: *mut ffi::fluid_synth_t) -> i32;
+}
+
+impl IsSamples for &mut [i16] {
+    /// Write samples interleaved
+    fn write_samples(self, handle: *mut ffi::fluid_synth_t) -> i32 {
+        let len = self.len() / 2;
+        unsafe {
+            ffi::fluid_synth_write_s16(handle, len as _,
+				                               self.as_mut_ptr() as _, 0, 2,
+				                               self.as_mut_ptr() as _, 1, 2)
+        }
+    }
+}
+
+impl IsSamples for (&mut [i16], &mut [i16]) {
+    /// Write samples non-interleaved
+    fn write_samples(self, handle: *mut ffi::fluid_synth_t) -> i32 {
+        let len = self.0.len().min(self.1.len());
+        unsafe {
+            ffi::fluid_synth_write_s16(handle, len as _,
+				                               self.0.as_mut_ptr() as _, 0, 1,
+				                               self.1.as_mut_ptr() as _, 0, 1)
+        }
+    }
+}
+
+impl IsSamples for &mut [f32] {
+    /// Write samples interleaved
+    fn write_samples(self, handle: *mut ffi::fluid_synth_t) -> i32 {
+        let len = self.len() / 2;
+        unsafe {
+            ffi::fluid_synth_write_float(handle, len as _,
+				                                 self.as_mut_ptr() as _, 0, 2,
+				                                 self.as_mut_ptr() as _, 1, 2)
+        }
+    }
+}
+
+impl IsSamples for (&mut [f32], &mut [f32]) {
+    /// Write samples non-interleaved
+    fn write_samples(self, handle: *mut ffi::fluid_synth_t) -> i32 {
+        let len = self.0.len().min(self.1.len());
+        unsafe {
+            ffi::fluid_synth_write_float(handle, len as _,
+				                                 self.0.as_mut_ptr() as _, 0, 1,
+				                                 self.1.as_mut_ptr() as _, 0, 1)
+        }
+    }
+}
+
 /**
 Synthesizer plugin
  */
 impl Synth {
     /**
-    Generate a number of samples. This function expects two signed
-    16bits buffers (left and right channel) that will be filled with
-    samples.
-
-    \param synth The synthesizer
-    \param len The number of samples to generate
-    \param lout The sample buffer for the left channel
-    \param loff The offset, in samples, in the left buffer where the writing pointer starts
-    \param lincr The increment, in samples, of the writing pointer in the left buffer
-    \param rout The sample buffer for the right channel
-    \param roff The offset, in samples, in the right buffer where the writing pointer starts
-    \param rincr The increment, in samples, of the writing pointer in the right buffer
-    \returns 0 if no error occured, non-zero otherwise
+    Write sound samples to sample data buffer
      */
-    pub fn write_s16(&self,
-FLUIDSYNTH_API int fluid_synth_write_s16(fluid_synth_t* synth, int len,
-				       void* lout, int loff, int lincr,
-				       void* rout, int roff, int rincr);
-
-
-    /**
-    Generate a number of samples. This function expects two floating
-    point buffers (left and right channel) that will be filled with
-    samples.
-
-    \param synth The synthesizer
-    \param len The number of samples to generate
-    \param lout The sample buffer for the left channel
-    \param loff The offset, in samples, in the left buffer where the writing pointer starts
-    \param lincr The increment, in samples, of the writing pointer in the left buffer
-    \param rout The sample buffer for the right channel
-    \param roff The offset, in samples, in the right buffer where the writing pointer starts
-    \param rincr The increment, in samples, of the writing pointer in the right buffer
-    \returns 0 if no error occured, non-zero otherwise
-     */
-
-FLUIDSYNTH_API int fluid_synth_write_float(fluid_synth_t* synth, int len,
-					 void* lout, int loff, int lincr,
-					 void* rout, int roff, int rincr);
-
-FLUIDSYNTH_API int fluid_synth_nwrite_float(fluid_synth_t* synth, int len,
-					  float** left, float** right,
-					  float** fx_left, float** fx_right);
-
-    /**
-    Generate a number of samples. This function implements the
-    default interface defined in fluidsynth/audio.h. This function
-    ignores the input buffers and expects at least two output
-    buffer.
-
-    \param synth The synthesizer
-    \param len The number of samples to generate
-    \param nin The number of input buffers
-    \param in The array of input buffers
-    \param nout The number of output buffers
-    \param out The array of output buffers
-    \returns 0 if no error occured, non-zero otherwise
-     */
-
-FLUIDSYNTH_API int fluid_synth_process(fluid_synth_t* synth, int len,
-				     int nin, float** in,
-				     int nout, float** out);
+    pub fn write<S: IsSamples>(&self, samples: S) -> Status {
+        self.zero_ok(samples.write_samples(self.handle))
+    }
 }

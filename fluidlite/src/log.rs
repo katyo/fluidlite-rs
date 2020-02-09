@@ -207,8 +207,8 @@ where
     logger.log(level, message);
 }
 
-pub fn default_log(level: i32, message: &str) {
+pub fn default_log(level: LogLevel, message: &str) {
     let mut message = String::from(message);
     message.push('\0');
-    unsafe { ffi::fluid_default_log_function(level, message.as_mut_ptr() as *mut _, null_mut()); }
+    unsafe { ffi::fluid_default_log_function(level as _, message.as_mut_ptr() as *mut _, null_mut()); }
 }

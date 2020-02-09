@@ -3,9 +3,9 @@ use crate::ffi;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Version {
-    pub major: i32,
-    pub minor: i32,
-    pub micro: i32,
+    pub major: u32,
+    pub minor: u32,
+    pub micro: u32,
 }
 
 pub fn version() -> Version {
@@ -20,8 +20,8 @@ pub fn version() -> Version {
     ); }
 
     Version {
-        major: unsafe { major.assume_init() },
-        minor: unsafe { minor.assume_init() },
-        micro: unsafe { micro.assume_init() },
+        major: unsafe { major.assume_init() as _ },
+        minor: unsafe { minor.assume_init() as _ },
+        micro: unsafe { micro.assume_init() as _ },
     }
 }

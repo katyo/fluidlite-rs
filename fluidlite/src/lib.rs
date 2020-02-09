@@ -23,32 +23,34 @@ This project aims provide safe Rust bindings to [fluidlite](https://github.com/k
 
 ## Features
 
-* __generate-bindings__ Force generate bindings itself instead of use pre-generated
+* __generate-bindings__ Force generate bindings on build instead of using pre-generated
 
 ## Example
 
-```ignore
-use std::fs::File;
-use fluidlite::{};
+```no_run
+use std::{
+    fs::File,
+    io::Write,
+};
+use byte_slice_cast::AsByteSlice;
+use fluidlite::{Settings, Synth};
 
-fn main() {
-    let settings = Settings::default();
+let settings = Settings::new().unwrap();
 
-    let synth = Synth::new(settings);
-    synth.sfload("soundfont.sf3", 1);
+let synth = Synth::new(settings).unwrap();
+synth.sfload("soundfont.sf3", true).unwrap();
 
-    let buffer = new float[44100*2];
+let mut buffer = [0i16; 44100 * 2];
 
-    let file = File::create("float32output.pcm");
+let mut file = File::create("soundfont-sample.pcm").unwrap();
 
-    synth.noteon(0, 60, 127);
-    synth.write_float(44100, buffer, 0, 2, buffer, 1, 2);
-    file.write(buffer);
+synth.note_on(0, 60, 127).unwrap();
+synth.write(buffer.as_mut()).unwrap();
+file.write(buffer.as_byte_slice()).unwrap();
 
-    synth.noteoff(0, 60);
-    synth.write_float(44100, buffer, 0, 2, buffer, 1, 2);
-    file.write(buffer);
-}
+synth.note_off(0, 60).unwrap();
+synth.write(buffer.as_mut()).unwrap();
+file.write(buffer.as_byte_slice()).unwrap();
 ```
 
  */
@@ -57,19 +59,18 @@ fn main() {
 #[cfg(test)]
 use fluidlite_lib as _;
 
+mod types;
+mod loader;
 mod settings;
 mod synth;
 mod log;
 mod version;
 
+pub use self::types::*;
+pub use self::loader::*;
 pub use self::settings::*;
 pub use self::synth::*;
 pub use self::log::*;
 pub use self::version::*;
 
 pub(crate) use fluidlite_sys as ffi;
-
-use std::result::{Result as StdResult};
-
-pub type Result<T> = StdResult<T, String>;
-pub type Status = Result<()>;
