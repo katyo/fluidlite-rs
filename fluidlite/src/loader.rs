@@ -29,10 +29,7 @@ pub trait FileApi {
     fn seek(file: &mut Self::File, pos: SeekFrom) -> bool;
 
     /// Get current reading position from beginning of file
-    fn tell(file: &Self::File) -> Option<u64>;
-
-    /// Close file descriptor
-    fn close(file: &mut Self::File) -> bool;
+    fn tell(file: &mut Self::File) -> Option<u64>;
 }
 
 /**
@@ -42,6 +39,8 @@ The SoundFont loader object
 pub struct Loader {
     handle: *mut ffi::fluid_sfloader_t,
 }
+
+unsafe impl Send for Loader {}
 
 impl Loader {
     /**
@@ -174,11 +173,51 @@ extern "C" fn tell_wrapper<F: FileApi>(handle: *mut c_void) -> c_long {
 }
 
 extern "C" fn close_wrapper<F: FileApi>(handle: *mut c_void) -> c_int {
-    let mut handle = unsafe { Box::from_raw(handle as *mut F::File) };
+    let _handle = unsafe { Box::from_raw(handle as *mut F::File) };
 
-    if F::close(&mut handle) {
-        ffi::FLUID_OK
-    } else {
-        ffi::FLUID_FAILED
+    ffi::FLUID_OK
+}
+
+#[cfg(test)]
+mod test {
+    use std::{
+        io::{Read, Seek, SeekFrom},
+        fs::File,
+        path::Path,
+    };
+    use crate::{Settings, Synth, FileApi, Loader};
+
+    struct TestFileApi;
+
+    impl FileApi for TestFileApi {
+        type File = File;
+
+        fn open(&mut self, filename: &Path) -> Option<Self::File> {
+            File::open(filename).ok()
+        }
+
+        fn read(file: &mut Self::File, buf: &mut [u8]) -> bool {
+            file.read(buf).is_ok()
+        }
+
+        fn seek(file: &mut Self::File, pos: SeekFrom) -> bool {
+            file.seek(pos).is_ok()
+        }
+
+        fn tell(file: &mut Self::File) -> Option<u64> {
+            file.seek(SeekFrom::Current(0)).ok()
+        }
+    }
+
+    #[test]
+    fn fileapi() {
+        let settings = Settings::new().unwrap();
+        let synth = Synth::new(settings).unwrap();
+        let loader = Loader::new_default().unwrap();
+
+        loader.set_file_api(TestFileApi);
+        synth.add_sfloader(loader);
+
+        synth.sfload("../sf_/Boomwhacker.sf3", true).unwrap();
     }
 }
