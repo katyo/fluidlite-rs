@@ -21,12 +21,24 @@ script:
   cd -
 - |
   cd fluidlite
-  cargo test --release
+  cargo test --release --features log
   cd -
 jobs:
   allow_failures:
   - rust: nightly
   include:
   - stage: publish
-    script: cargo publish
-    if: (type = push) && (tag =~ ^[0-9])
+    script:
+    - |
+      cd fluidlite-sys
+      cargo publish || true
+      cd -
+    - |
+      cd fluidlite-lib
+      cargo publish || true
+      cd -
+    - |
+      cd fluidlite
+      cargo publish || true
+      cd -
+    if: (type = push) && (tag =~ /^\d+\.\d+\.\d+/)
