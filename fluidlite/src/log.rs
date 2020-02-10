@@ -1,5 +1,5 @@
 use std::{
-    ffi::CStr,
+    ffi::{CStr, CString},
     os::raw,
     ptr::null_mut,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -113,7 +113,16 @@ pub trait Logger {
 }
 
 /**
- * Closure logger wrapper
+Closure logger wrapper
+
+```no_run
+use fluidlite::{Log, LogLevel, FnLogger};
+
+let log = Log::new(&LogLevel::DEBUG, FnLogger::new(|level, message| {
+    eprintln!("[{}]: {}", level, message);
+}));
+// Hold `log` to keep logger alive
+```
  */
 pub struct FnLogger<F>(F);
 
@@ -168,8 +177,11 @@ impl<T> DerefMut for Log<T> {
 }
 
 impl<T: Logger> Log<T> {
-    pub fn new<I: IntoIterator<Item = LogLevel>>(levels: I, logger: T) -> Self {
-        let levels: Vec<_> = levels.into_iter().collect();
+    pub fn new<'a, I>(levels: I, logger: T) -> Self
+    where
+        I: IntoIterator<Item = &'a LogLevel>,
+    {
+        let levels: Vec<_> = levels.into_iter().cloned().collect();
         let logger = Box::new(logger);
 
         for level in &levels {
@@ -185,8 +197,71 @@ impl<T: Logger> Log<T> {
 }
 
 impl<F: FnMut(LogLevel, &str)> Log<FnLogger<F>> {
-    pub fn new_fn<I: IntoIterator<Item = LogLevel>>(levels: I, func: F) -> Self {
+    pub fn new_fn<'a, I>(levels: I, func: F) -> Self
+    where
+        I: IntoIterator<Item = &'a LogLevel>,
+    {
         Log::new(levels, FnLogger::new(func))
+    }
+}
+
+impl Log<()> {
+    pub fn default_log(level: LogLevel, message: &str) {
+        let message = CString::new(message).unwrap();
+        unsafe { ffi::fluid_default_log_function(level as _, message.as_ptr() as *mut _, null_mut()); }
+    }
+}
+
+#[cfg(feature = "log")]
+pub use self::log::LogLogger;
+
+#[cfg(feature = "log")]
+mod log {
+    use log::{log, Level};
+    use super::{LogLevel, Logger};
+
+    /**
+    Logger implementation backed by [log](https://crates.io/crates/log) crate.
+
+    ```no_run
+    use fluidlite::{Log, LogLevel, LogLogger};
+
+    let log = Log::new(&LogLevel::DEBUG, LogLogger::default());
+    // Hold `log` to keep logger alive
+    ```
+     */
+    pub struct LogLogger<S> {
+        target: S,
+    }
+
+    impl Default for LogLogger<&'static str> {
+        fn default() -> Self {
+            Self::new("fluidlite")
+        }
+    }
+
+    impl<S> LogLogger<S> {
+        pub fn new(target: S) -> Self {
+            Self { target }
+        }
+    }
+
+    impl<S: AsRef<str>> Logger for LogLogger<S> {
+        fn log(&mut self, level: LogLevel, message: &str) {
+            log!(target: self.target.as_ref(), level.into(), "{}", message);
+        }
+    }
+
+    impl Into<Level> for LogLevel {
+        fn into(self) -> Level {
+            match self {
+                LogLevel::Panic => Level::Error,
+                LogLevel::Error => Level::Error,
+                LogLevel::Warning => Level::Warn,
+                LogLevel::Info => Level::Info,
+                LogLevel::Debug => Level::Debug,
+            }
+        }
     }
 }
 
@@ -205,10 +280,4 @@ where
     let message = unsafe { CStr::from_ptr(message).to_str().unwrap() };
 
     logger.log(level, message);
-}
-
-pub fn default_log(level: LogLevel, message: &str) {
-    let mut message = String::from(message);
-    message.push('\0');
-    unsafe { ffi::fluid_default_log_function(level as _, message.as_mut_ptr() as *mut _, null_mut()); }
 }
