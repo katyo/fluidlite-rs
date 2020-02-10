@@ -135,12 +135,7 @@ impl Synth {
     similar to sending an NRPN message to the synthesizer. The
     function accepts a float as the value of the parameter. The
     parameter numbers and ranges are described in the SoundFont 2.01
-    specification, paragraph 8.1.3, page 48. See also 'fluid_gen_type'.
-    \param synth The synthesizer object.
-    \param chan The MIDI channel number.
-    \param param The parameter number.
-    \param value The parameter value.
-    \returns Your favorite dish.
+    specification, paragraph 8.1.3, page 48.
      */
     pub fn set_gen(&self, chan: Chan, param: GenParam, value: f32) -> Status {
         self.zero_ok(unsafe { ffi::fluid_synth_set_gen(self.handle, chan as _, param as _, value) })
@@ -148,11 +143,9 @@ impl Synth {
 
     /**
     Retreive the value of a generator. This function returns the value
-    set by a previous call 'fluid_synth_set_gen' or by an NRPN message.
-    \param synth The synthesizer object.
-    \param chan The MIDI channel number.
-    \param param The generator number.
-    \returns The value of the generator.
+    set by a previous call 'set_gen()' or by an NRPN message.
+
+    Returns the value of the generator.
      */
     pub fn get_gen(&self, chan: Chan, param: GenParam) -> f32 {
         unsafe { ffi::fluid_synth_get_gen(self.handle, chan as _, param as _) }

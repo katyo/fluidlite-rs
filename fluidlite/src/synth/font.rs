@@ -1,4 +1,5 @@
 use std::{
+    marker::PhantomData,
     ffi::CString,
     path::Path,
 };
@@ -55,6 +56,13 @@ impl Synth {
     pub fn get_sfont(&self, num: u32) -> Option<FontRef<'_>> {
         option_from_ptr(unsafe { ffi::fluid_synth_get_sfont(self.handle, num) })
             .map(FontRef::from_ptr)
+    }
+
+    /**
+    Get an iterator over loaded SoundFonts.
+     */
+    pub fn sfont_iter(&self) -> FontIter<'_> {
+        FontIter::from_ptr(self.handle)
     }
 
     /**
@@ -133,5 +141,33 @@ mod test {
         assert_eq!(preset.get_name().unwrap(), "Boomwhacker");
         assert_eq!(preset.get_banknum().unwrap(), 0);
         assert_eq!(preset.get_num().unwrap(), 0);
+    }
+}
+
+/**
+The iterator over loaded SoundFonts.
+ */
+pub struct FontIter<'a> {
+    handle: *mut ffi::fluid_synth_t,
+    phantom: PhantomData<&'a ()>,
+    font_no: u32,
+}
+
+impl<'a> FontIter<'a> {
+    fn from_ptr(handle: *mut ffi::fluid_synth_t) -> Self {
+        Self { handle, phantom: PhantomData, font_no: 0 }
+    }
+}
+
+impl<'a> Iterator for FontIter<'a> {
+    type Item = FontRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let font = option_from_ptr(unsafe { ffi::fluid_synth_get_sfont(self.handle, self.font_no) })
+            .map(FontRef::from_ptr);
+        if font.is_some() {
+            self.font_no += 1;
+        }
+        font
     }
 }

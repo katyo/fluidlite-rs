@@ -1,5 +1,6 @@
 use std::{
     mem::MaybeUninit,
+    marker::PhantomData,
     ffi::{CStr, CString},
 };
 use crate::{ffi, Synth, Result, Status, Chan, Bank, Prog};
@@ -77,27 +78,10 @@ impl Synth {
     }
 
     /**
-    Start the iteration throught the list of available tunings.
-    \param synth The synthesizer object
+    Get the iterator throught the list of available tunings.
      */
-    pub fn tuning_iteration_start(&self) {
-        unsafe { ffi::fluid_synth_tuning_iteration_start(self.handle); }
-    }
-
-    /**
-    Get the next tuning in the iteration. This functions stores the
-    bank and program number of the next tuning in the pointers given as
-    arguments.
-     */
-    pub fn iteration_next(&self) -> (Bank, Prog, bool) {
-        let mut bank = MaybeUninit::uninit();
-        let mut prog = MaybeUninit::uninit();
-        let next = unsafe { ffi::fluid_synth_tuning_iteration_next(self.handle, bank.as_mut_ptr(), prog.as_mut_ptr()) };
-        (
-            unsafe { bank.assume_init() as _ },
-            unsafe { prog.assume_init() as _ },
-            next != 0,
-        )
+    pub fn tuning_iter(&self) -> TuningIter<'_> {
+        TuningIter::from_ptr(self.handle)
     }
 
     /**
@@ -117,5 +101,45 @@ impl Synth {
             (unsafe { CStr::from_ptr(name.as_ptr() as _) }).to_str().unwrap().into(),
             unsafe { pitch.assume_init() },
         ))
+    }
+}
+
+/**
+The iterator over tunings
+ */
+pub struct TuningIter<'a> {
+    handle: *mut ffi::fluid_synth_t,
+    phantom: PhantomData<&'a ()>,
+    init: bool,
+    next: bool,
+}
+
+impl<'a> TuningIter<'a> {
+    fn from_ptr(handle: *mut ffi::fluid_synth_t) -> Self {
+        Self { handle, phantom: PhantomData, init: true, next: true }
+    }
+}
+
+impl<'a> Iterator for TuningIter<'a> {
+    type Item = (Bank, Prog);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.init {
+            self.init = false;
+            unsafe { ffi::fluid_synth_tuning_iteration_start(self.handle); }
+        }
+        if self.next {
+            let mut bank = MaybeUninit::uninit();
+            let mut prog = MaybeUninit::uninit();
+            self.next = 0 != unsafe { ffi::fluid_synth_tuning_iteration_next(
+                self.handle, bank.as_mut_ptr(), prog.as_mut_ptr()) };
+
+            Some((
+                unsafe { bank.assume_init() as _ },
+                unsafe { prog.assume_init() as _ },
+            ))
+        } else {
+            None
+        }
     }
 }
