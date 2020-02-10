@@ -11,6 +11,9 @@ mod tuning;
 mod misc;
 mod write;
 
+pub use self::tuning::TuningIter;
+pub use self::write::IsSamples;
+
 use crate::{ffi, Settings, SettingsRef, Result, result_from_ptr};
 
 /**

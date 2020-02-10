@@ -54,6 +54,9 @@ impl<'a> SettingsRef<'a> {
     }
 }
 
+/**
+The settings interface
+ */
 pub trait IsSettings {
     fn pick<S, T>(&self, name: S) -> Option<Setting<'_, T>>
     where
@@ -135,6 +138,9 @@ mod private {
     }
 }
 
+/**
+The single setting object interface
+ */
 pub trait IsSetting {
     const TYPE: ffi::fluid_types_enum;
 }
