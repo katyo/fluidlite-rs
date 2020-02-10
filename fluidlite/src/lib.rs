@@ -60,6 +60,8 @@ file.write(buffer.as_byte_slice()).unwrap();
 use fluidlite_lib as _;
 
 mod types;
+mod private;
+mod font;
 mod loader;
 mod settings;
 mod synth;
@@ -67,6 +69,7 @@ mod log;
 mod version;
 
 pub use self::types::*;
+pub use self::font::*;
 pub use self::loader::*;
 pub use self::settings::*;
 pub use self::synth::*;

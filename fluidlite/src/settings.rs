@@ -78,13 +78,7 @@ mod private {
         ffi::CString,
         marker::PhantomData,
     };
-    use super::{ffi, IsSettings, IsSetting, Setting, Settings, SettingsRef};
-
-    pub trait HasHandle {
-        type Handle;
-
-        fn get_handle(&self) -> *mut Self::Handle;
-    }
+    use crate::{ffi, IsSettings, IsSetting, Setting, Settings, SettingsRef, private::HasHandle};
 
     impl<X> IsSettings for X where X: HasHandle<Handle = ffi::fluid_settings_t> {
         fn pick<S, T>(&self, name: S) -> Option<Setting<'_, T>>

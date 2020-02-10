@@ -1,5 +1,5 @@
 use std::mem::MaybeUninit;
-use crate::{Synth, Result, Status, Chan, Key, Vel, Ctrl, Val, Prog, Bank, FontId, PresId, ffi};
+use crate::{Synth, Result, Status, Chan, Key, Vel, Ctrl, Val, Prog, Bank, FontId, PresetId, ffi};
 
 /**
 MIDI channel messages
@@ -101,14 +101,14 @@ impl Synth {
     allows any preset to be selected and circumvents preset masking
     due to previously loaded SoundFonts on the SoundFont stack.
      */
-    pub fn program_select(&self, chan: Chan, sfont_id: FontId, bank_num: Bank, preset_num: PresId) -> Status {
+    pub fn program_select(&self, chan: Chan, sfont_id: FontId, bank_num: Bank, preset_num: PresetId) -> Status {
         self.zero_ok(unsafe { ffi::fluid_synth_program_select(self.handle, chan as _, sfont_id, bank_num, preset_num) })
     }
 
     /**
     Returns the program, bank, and SoundFont number of the preset on a given channel.
      */
-    pub fn get_program(&self, chan: Chan) -> Result<(FontId, Bank, PresId)> {
+    pub fn get_program(&self, chan: Chan) -> Result<(FontId, Bank, PresetId)> {
         let mut sfont_id = MaybeUninit::uninit();
         let mut bank_num = MaybeUninit::uninit();
         let mut preset_num = MaybeUninit::uninit();

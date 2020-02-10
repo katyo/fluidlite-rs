@@ -1,6 +1,6 @@
 mod midi;
 mod low;
-mod sfont;
+mod font;
 mod loader;
 mod reverb;
 mod chorus;

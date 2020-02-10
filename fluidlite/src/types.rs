@@ -29,7 +29,7 @@ pub type Bank = u32;
 pub type FontId = u32;
 
 /// Preset Id
-pub type PresId = u32;
+pub type PresetId = u32;
 
 /// Generic result type
 pub type Result<T> = StdResult<T, Error>;
@@ -66,5 +66,13 @@ pub(crate) fn result_from_ptr<T>(ptr: *mut T) -> Result<*mut T> {
         Err(Error::Alloc)
     } else {
         Ok(ptr)
+    }
+}
+
+pub(crate) fn option_from_ptr<T>(ptr: *mut T) -> Option<*mut T> {
+    if ptr.is_null() {
+        None
+    } else {
+        Some(ptr)
     }
 }

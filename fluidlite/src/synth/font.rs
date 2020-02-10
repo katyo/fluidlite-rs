@@ -2,7 +2,7 @@ use std::{
     ffi::CString,
     path::Path,
 };
-use crate::{ffi, Synth, Result, Status, Error, FontId};
+use crate::{ffi, Synth, Result, Status, Error, FontId, FontRef, PresetRef, Chan, option_from_ptr};
 
 /**
 SoundFont management
@@ -39,6 +39,42 @@ impl Synth {
         self.zero_ok(unsafe { ffi::fluid_synth_sfunload(self.handle, id, reset_presets as _) })
     }
 
+    /**
+    Count the number of loaded SoundFonts.
+     */
+    pub fn sfcount(&self) -> Result<u32> {
+        self.neg_err(unsafe { ffi::fluid_synth_sfcount(self.handle) })
+            .map(|n| n as _)
+    }
+
+    /**
+    Get a SoundFont. The SoundFont is specified by its index on the
+    stack. The top of the stack has index zero.
+
+    - `num` The number of the SoundFont (0 <= num < sfcount)
+     */
+    pub fn get_sfont(&self, num: u32) -> Option<FontRef<'_>> {
+        option_from_ptr(unsafe { ffi::fluid_synth_get_sfont(self.handle, num) })
+            .map(FontRef::from_ptr)
+    }
+
+    /**
+    Get a SoundFont. The SoundFont is specified by its ID.
+     */
+    pub fn get_sfont_by_id(&self, id: FontId) -> Option<FontRef<'_>> {
+        option_from_ptr(unsafe { ffi::fluid_synth_get_sfont_by_id(self.handle, id) })
+            .map(FontRef::from_ptr)
+    }
+
+    /**
+    Remove a SoundFont that was previously added using
+    fluid_synth_add_sfont(). The synthesizer does not delete the
+    SoundFont; this is responsability of the caller.
+     */
+    pub fn remove_sfont(&self, sfont: FontRef<'_>) {
+        unsafe { ffi::fluid_synth_remove_sfont(self.handle, sfont.as_ptr()); }
+    }
+
     /*
     /**
     Add a SoundFont. The SoundFont will be put on top of
@@ -47,52 +83,15 @@ impl Synth {
     pub fn add_sfont(&self, sfont: &SFont) -> Result<FontId> {
         self.neg_err(unsafe { ffi::fluid_synth_add_sfont(self.handle, sfont.as_ptr()) })
     }
-
-    /**
-    Remove a SoundFont that was previously added using
-    fluid_synth_add_sfont(). The synthesizer does not delete the
-    SoundFont; this is responsability of the caller.
      */
-    pub fn remove_sfont(&self, sfont: &SFont) {
-        unsafe { ffi::fluid_synth_remove_sfont(self.handle, sfont.as_ptr()); }
-    }
-
-    /**
-    Count the number of loaded SoundFonts.
-     */
-    pub fn sfcount(&self) -> Result<u32> {
-        self.neg_err(unsafe { ffi::fluid_synth_sfcount(self.handle) })
-    }
-
-    /**
-    Get a SoundFont. The SoundFont is specified by its index on the
-    stack. The top of the stack has index zero.
-
-    \param synth The synthesizer object
-    \param num The number of the SoundFont (0 <= num < sfcount)
-    \returns A pointer to the SoundFont
-     */
-    pub fn get_sfont(&self, num: u32) -> Result<&SFont> {
-      //FLUIDSYNTH_API fluid_sfont_t* fluid_synth_get_sfont(fluid_synth_t* synth, unsigned int num);
-    }
-
-    /**
-    Get a SoundFont. The SoundFont is specified by its ID.
-    \param synth The synthesizer object
-    \param id The id of the sfont
-    \returns A pointer to the SoundFont
-     */
-    pub fn get_sfont_by_id(&self, id: FontId) -> Result<SFont> {
-        //FLUIDSYNTH_API fluid_sfont_t* fluid_synth_get_sfont_by_id(fluid_synth_t* synth, unsigned int id);
-    }
 
     /**
     Get the preset of a channel
      */
-    pub fn get_channel_preset(&self, chan: Chan) -> Result<Preset> {
-        //FLUIDSYNTH_API fluid_preset_t* fluid_synth_get_channel_preset(fluid_synth_t* synth, int chan);
+    pub fn get_channel_preset(&self, chan: Chan) -> Option<PresetRef<'_>> {
+        option_from_ptr(unsafe { ffi::fluid_synth_get_channel_preset(self.handle, chan as _) })
+            .map(PresetRef::from_ptr)
     }
-     */
 
     /**
     Offset the bank numbers in a SoundFont.
