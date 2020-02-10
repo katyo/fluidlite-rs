@@ -2,6 +2,7 @@ use std::{
     mem::MaybeUninit,
     marker::PhantomData,
     ffi::{CStr, CString},
+    ptr::null_mut,
 };
 use crate::{ffi, Synth, Result, Status, Chan, Bank, Prog};
 
@@ -85,9 +86,9 @@ impl Synth {
     }
 
     /**
-    Dump the data of a tuning. This functions stores the name and
-    pitch values of a tuning in the pointers given as arguments. Both
-    name and pitch can be NULL is the data is not needed.
+    Dump the data of a tuning.
+
+    This function returns both the name and pitch values of a tuning.
      */
     pub fn tuning_dump(&self, bank: Bank, prog: Prog) -> Result<(String, [f64; 128])> {
         const NAME_LEN: usize = 128;
@@ -101,6 +102,34 @@ impl Synth {
             (unsafe { CStr::from_ptr(name.as_ptr() as _) }).to_str().unwrap().into(),
             unsafe { pitch.assume_init() },
         ))
+    }
+
+    /**
+    Dump the data of a tuning.
+
+    This function returns the only name of a tuning.
+     */
+    pub fn tuning_dump_name(&self, bank: Bank, prog: Prog) -> Result<String> {
+        const NAME_LEN: usize = 128;
+
+        let mut name = MaybeUninit::<[u8; NAME_LEN]>::uninit();
+
+        self.zero_ok(unsafe { ffi::fluid_synth_tuning_dump(
+            self.handle, bank as _, prog as _, name.as_mut_ptr() as _, NAME_LEN as _, null_mut()) })?;
+        Ok((unsafe { CStr::from_ptr(name.as_ptr() as _) }).to_str().unwrap().into())
+    }
+
+    /**
+    Dump the data of a tuning.
+
+    This function returns the only pitch values of a tuning.
+     */
+    pub fn tuning_dump_pitch(&self, bank: Bank, prog: Prog) -> Result<[f64; 128]> {
+        let mut pitch = MaybeUninit::<[f64; 128]>::uninit();
+
+        self.zero_ok(unsafe { ffi::fluid_synth_tuning_dump(
+            self.handle, bank as _, prog as _, null_mut(), 0, pitch.as_mut_ptr() as _) })?;
+        Ok(unsafe { pitch.assume_init() })
     }
 }
 
