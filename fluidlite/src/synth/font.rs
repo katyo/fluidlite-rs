@@ -42,9 +42,8 @@ impl Synth {
     /**
     Count the number of loaded SoundFonts.
      */
-    pub fn sfcount(&self) -> Result<u32> {
-        self.neg_err(unsafe { ffi::fluid_synth_sfcount(self.handle) })
-            .map(|n| n as _)
+    pub fn sfcount(&self) -> u32 {
+        unsafe { ffi::fluid_synth_sfcount(self.handle) as _ }
     }
 
     /**
@@ -107,5 +106,32 @@ impl Synth {
     pub fn get_bank_offset(&self, sfont_id: FontId) -> Result<u32> {
         self.neg_err(unsafe { ffi::fluid_synth_get_bank_offset(self.handle, sfont_id as _) })
             .map(|val| val as _)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{IsFont, IsPreset, Settings, Synth};
+
+    #[test]
+    fn font_and_preset() {
+        let synth = Synth::new(Settings::new().unwrap()).unwrap();
+
+        assert_eq!(synth.sfcount(), 0);
+
+        synth.sfload("../sf_/Boomwhacker.sf2", true).unwrap();
+
+        assert_eq!(synth.sfcount(), 1);
+
+        let font = synth.get_sfont(0).unwrap();
+
+        assert_eq!(font.get_id(), 1);
+        assert_eq!(font.get_name().unwrap(), "../sf_/Boomwhacker.sf2");
+
+        let preset = font.get_preset(0, 0).unwrap();
+
+        assert_eq!(preset.get_name().unwrap(), "Boomwhacker");
+        assert_eq!(preset.get_banknum().unwrap(), 0);
+        assert_eq!(preset.get_num().unwrap(), 0);
     }
 }
