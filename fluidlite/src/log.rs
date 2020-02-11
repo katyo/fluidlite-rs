@@ -3,7 +3,6 @@ use std::{
     os::raw,
     ptr::null_mut,
     fmt::{Display, Formatter, Result as FmtResult},
-    ops::{Deref, DerefMut},
 };
 use crate::ffi;
 
@@ -115,19 +114,33 @@ pub trait Logger {
 /**
 Closure logger wrapper
 
-```no_run
+```
+# use fluidlite_lib as _;
 use fluidlite::{Log, LogLevel, FnLogger};
 
-let log = Log::new(&LogLevel::DEBUG, FnLogger::new(|level, message| {
+Log::set(&LogLevel::DEBUG,
+  FnLogger::from(|level, message: &str| {
     eprintln!("[{}]: {}", level, message);
-}));
-// Hold `log` to keep logger alive
+  })
+);
 ```
  */
 pub struct FnLogger<F>(F);
 
-impl<F: FnMut(LogLevel, &str)> FnLogger<F> {
+impl<F> FnLogger<F>
+where
+    F: FnMut(LogLevel, &str)
+{
     pub fn new(func: F) -> Self {
+        Self(func)
+    }
+}
+
+impl<F> From<F> for FnLogger<F>
+where
+    F: FnMut(LogLevel, &str)
+{
+    fn from(func: F) -> Self {
         Self(func)
     }
 }
@@ -145,12 +158,13 @@ impl<F: FnMut(LogLevel, &str)> Logger for FnLogger<F> {
  * Only one logger supported at a time.
  * You should keep logger from dropping while it used.
  */
-pub struct Log<T> {
+pub struct Log {
     levels: Vec<LogLevel>,
-    logger: Box<T>,
+    #[used]
+    logger: Box<dyn Logger>,
 }
 
-impl<T> Drop for Log<T> {
+impl Drop for Log {
     fn drop(&mut self) {
         for level in &self.levels {
             unsafe { ffi::fluid_set_log_function(
@@ -162,26 +176,14 @@ impl<T> Drop for Log<T> {
     }
 }
 
-impl<T> Deref for Log<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.logger
-    }
-}
-
-impl<T> DerefMut for Log<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.logger
-    }
-}
-
-impl<T: Logger> Log<T> {
-    pub fn new<'a, I>(levels: I, logger: T) -> Self
+impl Log {
+    /// Create and install logger
+    fn new<'a, I, T>(levels: I, logger: T) -> Self
     where
-        I: IntoIterator<Item = &'a LogLevel>,
+        T: Logger + 'static,
+        I: AsRef<[LogLevel]>,
     {
-        let levels: Vec<_> = levels.into_iter().cloned().collect();
+        let levels = Vec::from(levels.as_ref());
         let logger = Box::new(logger);
 
         for level in &levels {
@@ -196,16 +198,46 @@ impl<T: Logger> Log<T> {
     }
 }
 
-impl<F: FnMut(LogLevel, &str)> Log<FnLogger<F>> {
-    pub fn new_fn<'a, I>(levels: I, func: F) -> Self
+fn with_global_logger(func: impl FnOnce(&mut Option<Log>)) {
+    use std::sync::{Arc, Mutex, Once};
+
+    static ONCE: Once = Once::new();
+    static mut LOG: *mut Arc<Mutex<Option<Log>>> = null_mut();
+
+    ONCE.call_once(|| {
+        unsafe { LOG = Box::into_raw(Box::new(Arc::new(Mutex::new(None)))); }
+    });
+
+    let log = (unsafe { &*LOG }).clone();
+    let mut log = log.lock().unwrap();
+
+    func(&mut log);
+}
+
+impl Log {
+    /// Set logger
+    pub fn set<'a, I, T>(levels: I, logger: T)
     where
-        I: IntoIterator<Item = &'a LogLevel>,
+        T: Logger + 'static,
+        I: AsRef<[LogLevel]>,
     {
-        Log::new(levels, FnLogger::new(func))
+        with_global_logger(|global_logger| {
+            if global_logger.is_some() {
+                *global_logger = None;
+            }
+            *global_logger = Some(Log::new(levels, logger));
+        });
+    }
+
+    /// Reset logger
+    pub fn reset() {
+        with_global_logger(|global_logger| {
+            *global_logger = None;
+        });
     }
 }
 
-impl Log<()> {
+impl Log {
     pub fn default_log(level: LogLevel, message: &str) {
         let message = CString::new(message).unwrap();
         unsafe { ffi::fluid_default_log_function(level as _, message.as_ptr() as *mut _, null_mut()); }
@@ -223,11 +255,11 @@ mod log {
     /**
     Logger implementation backed by [log](https://crates.io/crates/log) crate.
 
-    ```no_run
+    ```
+    # use fluidlite_lib as _;
     use fluidlite::{Log, LogLevel, LogLogger};
 
-    let log = Log::new(&LogLevel::DEBUG, LogLogger::default());
-    // Hold `log` to keep logger alive
+    Log::set(&LogLevel::DEBUG, LogLogger::default());
     ```
      */
     pub struct LogLogger<S> {
