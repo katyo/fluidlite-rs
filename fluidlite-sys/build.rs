@@ -1,3 +1,4 @@
+#[cfg(feature = "generate-bindings")]
 mod source {
     pub const URL: &str = "https://github.com/katyo/{package}/archive/{version}.tar.gz";
     pub const VERSION: &str = "1.2.0";
@@ -77,6 +78,12 @@ mod utils {
                 format!("-I{}", inc_dir.display()),
             ])
             .header(inc_dir.join("fluidlite.h").display().to_string())
+            .whitelist_var("FLUID_.*")
+            .whitelist_var("SEEK_.*")
+            .whitelist_type("fluid_.*")
+            .whitelist_function("fluid_.*")
+            .whitelist_function("new_fluid_.*")
+            .whitelist_function("delete_fluid_.*")
             .generate()
             .expect("Generated bindings.");
 
