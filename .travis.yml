@@ -9,6 +9,13 @@ os:
 - windows
 cache:
   cargo: true
+before_install:
+- |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        choco upgrade --no-progress -y pkgconfiglite
+        ;;
+    esac
 script:
 - (cd fluidlite-sys && cargo test --release)
 - (cd fluidlite-lib && cargo test --release)
