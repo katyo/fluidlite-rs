@@ -7,38 +7,21 @@ os:
 - linux
 - osx
 - windows
-cache: cargo
+cache:
+  cargo: true
 script:
-- |
-  cd fluidlite-sys
-  cargo test --release
-  cd -
-- |
-  cd fluidlite-lib
-  cargo test --release
-  cargo test --release --features with-sf3
-  cargo test --release --features with-sf3,with-stb
-  cd -
-- |
-  cd fluidlite
-  cargo test --release --features log
-  cd -
+- (cd fluidlite-sys && cargo test --release)
+- (cd fluidlite-lib && cargo test --release)
+- (cd fluidlite-lib && cargo test --release --features with-sf3)
+- (cd fluidlite-lib && cargo test --release --features with-sf3,with-stb)
+- (cd fluidlite && cargo test --release --features log)
 jobs:
   allow_failures:
   - rust: nightly
   include:
   - stage: publish
     script:
-    - |
-      cd fluidlite-sys
-      cargo publish || true
-      cd -
-    - |
-      cd fluidlite-lib
-      cargo publish || true
-      cd -
-    - |
-      cd fluidlite
-      cargo publish || true
-      cd -
+    - (cd fluidlite-sys && cargo publish || true)
+    - (cd fluidlite-lib && cargo publish || true)
+    - (cd fluidlite && cargo publish || true)
     if: (type = push) && (tag =~ /^\d+\.\d+\.\d+/)

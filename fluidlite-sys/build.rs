@@ -1,3 +1,8 @@
+mod source {
+    pub const URL: &str = "https://github.com/katyo/{package}/archive/{version}.tar.gz";
+    pub const VERSION: &str = "1.2.0";
+}
+
 fn main() {
     #[cfg(feature = "generate-bindings")]
     {
@@ -6,12 +11,13 @@ fn main() {
             path::Path,
         };
 
-        let src = utils::Source {
-            repository: env::var("FLUIDLITE_REPOSITORY")
-                .unwrap_or("https://github.com/katyo/fluidlite".into()),
-            version: env::var("FLUIDLITE_VERSION")
-                .unwrap_or("1.2.0".into()),
-        };
+        let src = utils::Source::new(
+            "fluidlite",
+            env::var("FLUIDLITE_VERSION")
+                .unwrap_or(source::VERSION.into()),
+            env::var("FLUIDLITE_URL")
+                .unwrap_or(source::URL.into()),
+        );
 
         let out_dir = env::var("OUT_DIR")
             .expect("The OUT_DIR is set by cargo.");
@@ -35,17 +41,26 @@ mod utils {
     use std::path::Path;
 
     pub struct Source {
-        pub repository: String,
+        pub package: String,
         pub version: String,
+        pub url: String,
+    }
+
+    impl Source {
+        pub fn new(package: impl Into<String>, version: impl Into<String>, url: impl Into<String>) -> Self {
+            Self { package: package.into(), version: version.into(), url: url.into() }
+        }
+
+        pub fn url(&self) -> String {
+            self.url.replace("{package}", &self.package).replace("{version}", &self.version)
+        }
     }
 
     pub fn fetch_source(src: &Source, out_dir: &Path) {
         use fetch_unroll::Fetch;
 
         if !out_dir.is_dir() {
-            let src_url = format!("{repo}/archive/{ver}.tar.gz",
-                                  repo = src.repository,
-                                  ver = src.version);
+            let src_url = src.url();
 
             eprintln!("Fetch fluidlite from {} to {}",
                       src_url, out_dir.display());
@@ -63,7 +78,7 @@ mod utils {
             ])
             .header(inc_dir.join("fluidlite.h").display().to_string())
             .generate()
-            .expect("Genrated bindings.");
+            .expect("Generated bindings.");
 
         bindings
             .write_to_file(out_file)

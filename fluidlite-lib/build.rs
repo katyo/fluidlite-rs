@@ -1,3 +1,8 @@
+mod source {
+    pub const URL: &str = "https://github.com/katyo/{package}/archive/{version}.tar.gz";
+    pub const VERSION: &str = "1.2.0";
+}
+
 fn main() {
     #[cfg(not(feature = "rustdoc"))]
     {
@@ -6,12 +11,13 @@ fn main() {
             path::Path,
         };
 
-        let src = utils::Source {
-            repository: env::var("FLUIDLITE_REPOSITORY")
-                .unwrap_or("https://github.com/katyo/fluidlite".into()),
-            version: env::var("FLUIDLITE_VERSION")
-                .unwrap_or("1.2.0".into()),
-        };
+        let src = utils::Source::new(
+            "fluidlite",
+            env::var("FLUIDLITE_VERSION")
+                .unwrap_or(source::VERSION.into()),
+            env::var("FLUIDLITE_URL")
+                .unwrap_or(source::URL.into()),
+        );
 
         let out_dir = env::var("OUT_DIR")
             .expect("The OUT_DIR is set by cargo.");
@@ -21,9 +27,12 @@ fn main() {
         let src_dir = out_dir.join("source")
             .join(&src.version);
 
+        let bld_dir = out_dir.join("build")
+            .join(&src.version);
+
         utils::fetch_source(&src, &src_dir);
 
-        utils::compile_library(&src_dir);
+        utils::compile_library(&src_dir, &bld_dir);
     }
 }
 
@@ -31,17 +40,26 @@ mod utils {
     use std::path::Path;
 
     pub struct Source {
-        pub repository: String,
+        pub package: String,
         pub version: String,
+        pub url: String,
+    }
+
+    impl Source {
+        pub fn new(package: impl Into<String>, version: impl Into<String>, url: impl Into<String>) -> Self {
+            Self { package: package.into(), version: version.into(), url: url.into() }
+        }
+
+        pub fn url(&self) -> String {
+            self.url.replace("{package}", &self.package).replace("{version}", &self.version)
+        }
     }
 
     pub fn fetch_source(src: &Source, out_dir: &Path) {
         use fetch_unroll::Fetch;
 
         if !out_dir.is_dir() {
-            let src_url = format!("{repo}/archive/{ver}.tar.gz",
-                                  repo = src.repository,
-                                  ver = src.version);
+            let src_url = src.url();
 
             eprintln!("Fetch fluidlite from {} to {}",
                       src_url, out_dir.display());
@@ -51,25 +69,45 @@ mod utils {
         }
     }
 
-    pub fn compile_library(src_dir: &Path) {
+    pub fn lib_file<S: AsRef<str>>(name: S, shared: bool) -> String {
+        #[cfg(target_os = "windows")]
+        {
+            format!("{}.{}", name.as_ref(), if shared { "dll" } else { "lib" })
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            format!("lib{}.{}", name.as_ref(), if shared { "so" } else { "a" })
+        }
+    }
+
+    pub fn bool_flag(flag: bool) -> &'static str {
+        if flag { "ON" } else { "OFF" }
+    }
+
+    pub fn compile_library(src_dir: &Path, out_dir: &Path) {
         use cmake::Config;
+
+        let lib_dir = out_dir.join("lib");
 
         let lib_name = "fluidlite";
 
-        let library = Config::new(src_dir)
-        //.define("FLUIDLITE_BUILD_SHARED", if cfg!(feature = "shared") { "1" } else { "0" })
-        //.define("FLUIDLITE_BUILD_STATIC", if cfg!(feature = "shared") { "0" } else { "1" })
-            .define("ENABLE_SF3", if cfg!(feature = "with-sf3") { "1" } else { "0" })
-            .define("STB_VORBIS", if cfg!(feature = "with-stb") { "1" } else { "0" })
-            .define("CMAKE_C_COMPILER_WORKS", "1")
-            .define("CMAKE_CXX_COMPILER_WORKS", "1")
+        if !lib_dir.join(lib_file(&lib_name, cfg!(feature = "shared"))).is_file() {
+            std::fs::create_dir_all(out_dir).unwrap();
 
-            .always_configure(true)
-            .very_verbose(true)
-            .build_target("all")
-            .build();
+            Config::new(src_dir)
+                //.define("FLUIDLITE_BUILD_SHARED", bool_flag(cfg!(feature = "shared")))
+                //.define("FLUIDLITE_BUILD_STATIC", bool_flag(!cfg!(feature = "shared")))
+                .define("ENABLE_SF3", bool_flag(cfg!(feature = "with-sf3")))
+                .define("STB_VORBIS", bool_flag(cfg!(feature = "with-stb")))
+                .define("CMAKE_C_COMPILER_WORKS", bool_flag(true))
+                .define("CMAKE_CXX_COMPILER_WORKS", bool_flag(true))
 
-        let lib_dir = library.join("build");
+                .always_configure(true)
+                .very_verbose(true)
+                .out_dir(out_dir)
+                .build();
+        }
 
         println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
