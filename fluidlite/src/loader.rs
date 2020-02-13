@@ -149,9 +149,9 @@ extern "C" fn seek_wrapper<F: FileApi>(handle: *mut c_void, offset: c_long, orig
     use self::SeekFrom::*;
 
     let pos = match origin as _ {
-        ffi::SEEK_SET => Start(offset as u64),
-        ffi::SEEK_END => End(offset),
-        ffi::SEEK_CUR => Current(offset),
+        ffi::SEEK_SET => Start(offset as _),
+        ffi::SEEK_END => End(offset as _),
+        ffi::SEEK_CUR => Current(offset as _),
         _ => return ffi::FLUID_FAILED,
     };
 
