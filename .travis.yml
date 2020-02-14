@@ -30,5 +30,6 @@ jobs:
     script:
     - (cd fluidlite-sys && cargo publish || true)
     - (cd fluidlite-lib && cargo publish || true)
+    - sleep 10
     - (cd fluidlite && cargo publish || true)
     if: (type = push) && (tag =~ /^\d+\.\d+\.\d+/)
