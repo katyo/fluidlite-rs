@@ -1,6 +1,6 @@
 [package]
 name = "fluidlite-lib"
-version = "0.1.0"
+version = "0.1.2"
 description = "Bundled fluidlite library"
 categories = ["external-ffi-bindings", "multimedia::audio"]
 keywords = ["audio", "synth", "soundfont", "sf2", "library"]

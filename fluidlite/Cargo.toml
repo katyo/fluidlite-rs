@@ -1,6 +1,6 @@
 [package]
 name = "fluidlite"
-version = "0.1.0"
+version = "0.1.2"
 description = "Safe bindings to fluidlite library"
 categories = ["external-ffi-bindings", "multimedia::audio"]
 keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
@@ -24,14 +24,14 @@ optional = true
 
 [dependencies.fluidlite-sys]
 path = "../fluidlite-sys"
-version = "0.1.0"
+version = "0.1.2"
 
 [dev-dependencies]
 byte-slice-cast = "^0.3"
 
 [dev-dependencies.fluidlite-lib]
 path = "../fluidlite-lib"
-version = "0.1.0"
+version = "0.1.2"
 features = ["with-sf3", "with-stb"]
 
 [features]
