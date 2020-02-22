@@ -502,4 +502,15 @@ mod test {
         assert!(active.set("no"));
         assert_eq!(active.get(), Some("no"));
     }
+
+    #[test]
+    fn settings_ref() {
+        let settings = Settings::new().unwrap();
+
+        let settings_ref = SettingsRef::from_ptr(settings.into_ptr());
+
+        let gain = settings_ref.num("synth.gain").unwrap();
+
+        assert_eq!(gain.default(), 0.2f32 as f64);
+    }
 }
