@@ -10,8 +10,17 @@ readme = "README.md"
 repository = "https://github.com/katyo/fluidlite-rs"
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "katyo/fluidlite-rs" }
+[badges.travis-ci]
+repository = "katyo/fluidlite-rs"
+
+[badges.is-it-maintained-issue-resolution]
+repository = "katyo/fluidlite-rs"
+
+[badges.is-it-maintained-open-issues]
+repository = "katyo/fluidlite-rs"
+
+[badges.maintenance]
+status = "passively-maintained"
 
 [build-dependencies.fetch_unroll]
 version = "^0.2"
