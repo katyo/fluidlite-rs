@@ -1,6 +1,6 @@
-use num_traits::FromPrimitive;
-use num_derive::FromPrimitive;
 use crate::{ffi, Synth};
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 
 /**
 Chorus type
@@ -55,8 +55,9 @@ impl Synth {
     Keep in mind, that the needed CPU time is proportional to `nr`.
      */
     pub fn set_chorus_params(&self, nr: u32, level: f64, speed: f64, depth: f64, mode: ChorusMode) {
-        unsafe { ffi::fluid_synth_set_chorus(
-            self.handle, nr as i32, level, speed, depth, mode as i32); }
+        unsafe {
+            ffi::fluid_synth_set_chorus(self.handle, nr as i32, level, speed, depth, mode as i32);
+        }
     }
 
     /**
@@ -65,12 +66,20 @@ impl Synth {
     Keep in mind, that the needed CPU time is proportional to `nr`.
      */
     pub fn set_chorus(&self, params: &ChorusParams) {
-        self.set_chorus_params(params.nr, params.level, params.speed, params.depth, params.mode);
+        self.set_chorus_params(
+            params.nr,
+            params.level,
+            params.speed,
+            params.depth,
+            params.mode,
+        );
     }
 
     /** Turn on/off the built-in chorus unit */
     pub fn set_chorus_on(&self, on: bool) {
-        unsafe { ffi::fluid_synth_set_chorus_on(self.handle, on as _); }
+        unsafe {
+            ffi::fluid_synth_set_chorus_on(self.handle, on as _);
+        }
     }
 
     /**

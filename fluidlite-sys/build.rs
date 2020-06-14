@@ -7,26 +7,19 @@ mod source {
 fn main() {
     #[cfg(feature = "generate-bindings")]
     {
-        use std::{
-            env,
-            path::Path,
-        };
+        use std::{env, path::Path};
 
         let src = utils::Source::new(
             "fluidlite",
-            env::var("FLUIDLITE_VERSION")
-                .unwrap_or(source::VERSION.into()),
-            env::var("FLUIDLITE_URL")
-                .unwrap_or(source::URL.into()),
+            env::var("FLUIDLITE_VERSION").unwrap_or(source::VERSION.into()),
+            env::var("FLUIDLITE_URL").unwrap_or(source::URL.into()),
         );
 
-        let out_dir = env::var("OUT_DIR")
-            .expect("The OUT_DIR is set by cargo.");
+        let out_dir = env::var("OUT_DIR").expect("The OUT_DIR is set by cargo.");
 
         let out_dir = Path::new(&out_dir);
 
-        let src_dir = out_dir.join("source")
-            .join(&src.version);
+        let src_dir = out_dir.join("source").join(&src.version);
 
         utils::fetch_source(&src, &src_dir);
 
@@ -48,12 +41,22 @@ mod utils {
     }
 
     impl Source {
-        pub fn new(package: impl Into<String>, version: impl Into<String>, url: impl Into<String>) -> Self {
-            Self { package: package.into(), version: version.into(), url: url.into() }
+        pub fn new(
+            package: impl Into<String>,
+            version: impl Into<String>,
+            url: impl Into<String>,
+        ) -> Self {
+            Self {
+                package: package.into(),
+                version: version.into(),
+                url: url.into(),
+            }
         }
 
         pub fn url(&self) -> String {
-            self.url.replace("{package}", &self.package).replace("{version}", &self.version)
+            self.url
+                .replace("{package}", &self.package)
+                .replace("{version}", &self.version)
         }
     }
 
@@ -63,10 +66,12 @@ mod utils {
         if !out_dir.is_dir() {
             let src_url = src.url();
 
-            eprintln!("Fetch fluidlite from {} to {}",
-                      src_url, out_dir.display());
+            eprintln!("Fetch fluidlite from {} to {}", src_url, out_dir.display());
 
-            Fetch::from(src_url).unroll().strip_components(1).to(out_dir)
+            Fetch::from(src_url)
+                .unroll()
+                .strip_components(1)
+                .to(out_dir)
                 .expect("FluidLite sources should be fetched.");
         }
     }
@@ -74,9 +79,7 @@ mod utils {
     pub fn generate_bindings(inc_dir: &Path, out_file: &Path) {
         let bindings = bindgen::Builder::default()
             .detect_include_paths(true)
-            .clang_args(&[
-                format!("-I{}", inc_dir.display()),
-            ])
+            .clang_args(&[format!("-I{}", inc_dir.display())])
             .header(inc_dir.join("fluidlite.h").display().to_string())
             .whitelist_var("FLUID_.*")
             .whitelist_var("SEEK_.*")
@@ -87,8 +90,6 @@ mod utils {
             .generate()
             .expect("Generated bindings.");
 
-        bindings
-            .write_to_file(out_file)
-            .expect("Written bindings.");
+        bindings.write_to_file(out_file).expect("Written bindings.");
     }
 }

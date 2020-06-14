@@ -1,9 +1,5 @@
-use std::{
-    marker::PhantomData,
-    ffi::CString,
-    path::Path,
-};
-use crate::{ffi, Synth, Result, Status, Error, FontId, FontRef, PresetRef, Chan, option_from_ptr};
+use crate::{ffi, option_from_ptr, Chan, Error, FontId, FontRef, PresetRef, Result, Status, Synth};
+use std::{ffi::CString, marker::PhantomData, path::Path};
 
 /**
 SoundFont management
@@ -20,8 +16,10 @@ impl Synth {
         let filename = filename.as_ref().to_str().ok_or_else(|| Error::Path)?;
         let filename = CString::new(filename).map_err(|_| Error::Path)?;
 
-        self.neg_err(unsafe { ffi::fluid_synth_sfload(self.handle, filename.as_ptr(), reset_presets as _) })
-            .map(|id| id as _)
+        self.neg_err(unsafe {
+            ffi::fluid_synth_sfload(self.handle, filename.as_ptr(), reset_presets as _)
+        })
+        .map(|id| id as _)
     }
 
     /**
@@ -79,7 +77,9 @@ impl Synth {
     SoundFont; this is responsability of the caller.
      */
     pub fn remove_sfont(&self, sfont: FontRef<'_>) {
-        unsafe { ffi::fluid_synth_remove_sfont(self.handle, sfont.as_ptr()); }
+        unsafe {
+            ffi::fluid_synth_remove_sfont(self.handle, sfont.as_ptr());
+        }
     }
 
     /*
@@ -105,7 +105,9 @@ impl Synth {
     Returns -1 if an error occured (out of memory or negative offset)
      */
     pub fn set_bank_offset(&self, sfont_id: FontId, offset: u32) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_set_bank_offset(self.handle, sfont_id as _, offset as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_set_bank_offset(self.handle, sfont_id as _, offset as _)
+        })
     }
 
     /**
@@ -155,7 +157,11 @@ pub struct FontIter<'a> {
 
 impl<'a> FontIter<'a> {
     fn from_ptr(handle: *mut ffi::fluid_synth_t) -> Self {
-        Self { handle, phantom: PhantomData, font_no: 0 }
+        Self {
+            handle,
+            phantom: PhantomData,
+            font_no: 0,
+        }
     }
 }
 
@@ -163,8 +169,9 @@ impl<'a> Iterator for FontIter<'a> {
     type Item = FontRef<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let font = option_from_ptr(unsafe { ffi::fluid_synth_get_sfont(self.handle, self.font_no) })
-            .map(FontRef::from_ptr);
+        let font =
+            option_from_ptr(unsafe { ffi::fluid_synth_get_sfont(self.handle, self.font_no) })
+                .map(FontRef::from_ptr);
         if font.is_some() {
             self.font_no += 1;
         }

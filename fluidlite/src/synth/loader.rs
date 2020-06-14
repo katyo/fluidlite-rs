@@ -1,4 +1,4 @@
-use crate::{Synth, Loader, ffi};
+use crate::{ffi, Loader, Synth};
 
 impl Synth {
     /**
@@ -7,6 +7,8 @@ impl Synth {
     of wavetable data but export a SoundFont interface.
      */
     pub fn add_sfloader(&self, loader: Loader) {
-        unsafe { ffi::fluid_synth_add_sfloader(self.handle, loader.into_ptr()); }
+        unsafe {
+            ffi::fluid_synth_add_sfloader(self.handle, loader.into_ptr());
+        }
     }
 }

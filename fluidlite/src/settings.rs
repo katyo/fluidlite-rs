@@ -1,12 +1,12 @@
-use std::{
-    marker::PhantomData,
-    os::raw,
-    mem::{MaybeUninit, transmute},
-    ffi::{CString, CStr},
-    ops::{Bound, RangeBounds},
-};
+use crate::{ffi, result_from_ptr, Result};
 use bitflags::bitflags;
-use crate::{ffi, Result, result_from_ptr};
+use std::{
+    ffi::{CStr, CString},
+    marker::PhantomData,
+    mem::{transmute, MaybeUninit},
+    ops::{Bound, RangeBounds},
+    os::raw,
+};
 
 /**
 The generic settings object
@@ -35,8 +35,7 @@ impl Drop for Settings {
 
 impl Settings {
     pub fn new() -> Result<Self> {
-        result_from_ptr(unsafe { ffi::new_fluid_settings() })
-            .map(|handle| Self { handle })
+        result_from_ptr(unsafe { ffi::new_fluid_settings() }).map(|handle| Self { handle })
     }
 
     pub(crate) fn into_ptr(self) -> *mut ffi::fluid_settings_t {
@@ -50,7 +49,10 @@ impl Settings {
 
 impl<'a> SettingsRef<'a> {
     pub(crate) fn from_ptr(handle: *mut ffi::fluid_settings_t) -> Self {
-        Self { handle, phantom: PhantomData }
+        Self {
+            handle,
+            phantom: PhantomData,
+        }
     }
 }
 
@@ -77,13 +79,13 @@ pub trait IsSettings {
 }
 
 mod private {
-    use std::{
-        ffi::CString,
-        marker::PhantomData,
-    };
-    use crate::{ffi, IsSettings, IsSetting, Setting, Settings, SettingsRef, private::HasHandle};
+    use crate::{ffi, private::HasHandle, IsSetting, IsSettings, Setting, Settings, SettingsRef};
+    use std::{ffi::CString, marker::PhantomData};
 
-    impl<X> IsSettings for X where X: HasHandle<Handle = ffi::fluid_settings_t> {
+    impl<X> IsSettings for X
+    where
+        X: HasHandle<Handle = ffi::fluid_settings_t>,
+    {
         fn pick<S, T>(&self, name: S) -> Option<Setting<'_, T>>
         where
             S: Into<Vec<u8>>,
@@ -92,8 +94,13 @@ mod private {
             let handle = self.get_handle();
             let name = CString::new(name).ok()?;
 
-            if T::TYPE == unsafe { ffi::fluid_settings_get_type(handle, name.as_ptr() as *const _) } {
-                Some(Setting { handle, name, phantom: PhantomData })
+            if T::TYPE == unsafe { ffi::fluid_settings_get_type(handle, name.as_ptr() as *const _) }
+            {
+                Some(Setting {
+                    handle,
+                    name,
+                    phantom: PhantomData,
+                })
             } else {
                 None
             }
@@ -235,7 +242,7 @@ The single setting of specific type
 pub struct Setting<'a, T: ?Sized> {
     handle: *mut ffi::fluid_settings_t,
     name: CString,
-    phantom: PhantomData<(&'a (), T)>
+    phantom: PhantomData<(&'a (), T)>,
 }
 
 impl<'a, T> Setting<'a, T>
@@ -248,7 +255,9 @@ where
     }
 
     pub fn hints(&self) -> Hints {
-        Hints::from_bits_truncate(unsafe { ffi::fluid_settings_get_hints(self.handle, self.name_ptr()) })
+        Hints::from_bits_truncate(unsafe {
+            ffi::fluid_settings_get_hints(self.handle, self.name_ptr())
+        })
     }
 
     /** Returns whether the setting is changeable in real-time
@@ -267,7 +276,9 @@ impl<'a> Setting<'a, str> {
     pub fn set<S: Into<String>>(&self, value: S) -> bool {
         let mut value = value.into();
         value.push('\0');
-        0 < unsafe { ffi::fluid_settings_setstr(self.handle, self.name_ptr(), value.as_ptr() as *const _) }
+        0 < unsafe {
+            ffi::fluid_settings_setstr(self.handle, self.name_ptr(), value.as_ptr() as *const _)
+        }
     }
 
     /**
@@ -278,7 +289,9 @@ impl<'a> Setting<'a, str> {
     pub fn get(&self) -> Option<&str> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getstr(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe {
+            ffi::fluid_settings_getstr(self.handle, self.name_ptr(), value.as_mut_ptr())
+        } {
             let value = unsafe { value.assume_init() };
             let value = unsafe { CStr::from_ptr(value) };
             value.to_str().ok()
@@ -304,7 +317,9 @@ where
     fn eq(&self, other: &S) -> bool {
         let mut other = String::from(other.as_ref());
         other.push('\0');
-        0 < unsafe { ffi::fluid_settings_str_equal(self.handle, self.name_ptr(), other.as_ptr() as *mut _) }
+        0 < unsafe {
+            ffi::fluid_settings_str_equal(self.handle, self.name_ptr(), other.as_ptr() as *mut _)
+        }
     }
 }
 
@@ -376,7 +391,9 @@ impl<'a> Setting<'a, f64> {
     pub fn get(&self) -> Option<f64> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getnum(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe {
+            ffi::fluid_settings_getnum(self.handle, self.name_ptr(), value.as_mut_ptr())
+        } {
             let value = unsafe { value.assume_init() };
             Some(value)
         } else {
@@ -398,7 +415,14 @@ impl<'a> Setting<'a, f64> {
         let mut min = MaybeUninit::uninit();
         let mut max = MaybeUninit::uninit();
 
-        unsafe { ffi::fluid_settings_getnum_range(self.handle, self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
+        unsafe {
+            ffi::fluid_settings_getnum_range(
+                self.handle,
+                self.name_ptr(),
+                min.as_mut_ptr(),
+                max.as_mut_ptr(),
+            );
+        }
 
         let hints = self.hints();
         Range::new_unsafe(min, max, hints)
@@ -423,7 +447,9 @@ impl<'a> Setting<'a, i32> {
     pub fn get(&self) -> Option<i32> {
         let mut value = MaybeUninit::uninit();
 
-        if 0 < unsafe { ffi::fluid_settings_getint(self.handle, self.name_ptr(), value.as_mut_ptr()) } {
+        if 0 < unsafe {
+            ffi::fluid_settings_getint(self.handle, self.name_ptr(), value.as_mut_ptr())
+        } {
             let value = unsafe { value.assume_init() };
             Some(value)
         } else {
@@ -445,7 +471,14 @@ impl<'a> Setting<'a, i32> {
         let mut min = MaybeUninit::uninit();
         let mut max = MaybeUninit::uninit();
 
-        unsafe { ffi::fluid_settings_getint_range(self.handle, self.name_ptr(), min.as_mut_ptr(), max.as_mut_ptr()); }
+        unsafe {
+            ffi::fluid_settings_getint_range(
+                self.handle,
+                self.name_ptr(),
+                min.as_mut_ptr(),
+                max.as_mut_ptr(),
+            );
+        }
 
         let hints = self.hints();
         Range::new_unsafe(min, max, hints)

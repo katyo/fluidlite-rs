@@ -1,10 +1,10 @@
+use crate::ffi;
 use std::{
     ffi::{CStr, CString},
+    fmt::{Display, Formatter, Result as FmtResult},
     os::raw,
     ptr::null_mut,
-    fmt::{Display, Formatter, Result as FmtResult},
 };
-use crate::ffi;
 
 /**
  * Logging level
@@ -129,7 +129,7 @@ pub struct FnLogger<F>(F);
 
 impl<F> FnLogger<F>
 where
-    F: FnMut(LogLevel, &str)
+    F: FnMut(LogLevel, &str),
 {
     pub fn new(func: F) -> Self {
         Self(func)
@@ -138,7 +138,7 @@ where
 
 impl<F> From<F> for FnLogger<F>
 where
-    F: FnMut(LogLevel, &str)
+    F: FnMut(LogLevel, &str),
 {
     fn from(func: F) -> Self {
         Self(func)
@@ -167,11 +167,13 @@ pub struct Log {
 impl Drop for Log {
     fn drop(&mut self) {
         for level in &self.levels {
-            unsafe { ffi::fluid_set_log_function(
-                *level as i32,
-                Some(ffi::fluid_default_log_function),
-                null_mut(),
-            ); }
+            unsafe {
+                ffi::fluid_set_log_function(
+                    *level as i32,
+                    Some(ffi::fluid_default_log_function),
+                    null_mut(),
+                );
+            }
         }
     }
 }
@@ -187,11 +189,13 @@ impl Log {
         let logger = Box::new(logger);
 
         for level in &levels {
-            unsafe { ffi::fluid_set_log_function(
-                *level as i32,
-                Some(handler::<T>),
-                logger.as_ref() as *const _ as *mut _,
-            ); }
+            unsafe {
+                ffi::fluid_set_log_function(
+                    *level as i32,
+                    Some(handler::<T>),
+                    logger.as_ref() as *const _ as *mut _,
+                );
+            }
         }
 
         Log { levels, logger }
@@ -204,8 +208,8 @@ fn with_global_logger(func: impl FnOnce(&mut Option<Log>)) {
     static ONCE: Once = Once::new();
     static mut LOG: *mut Arc<Mutex<Option<Log>>> = null_mut();
 
-    ONCE.call_once(|| {
-        unsafe { LOG = Box::into_raw(Box::new(Arc::new(Mutex::new(None)))); }
+    ONCE.call_once(|| unsafe {
+        LOG = Box::into_raw(Box::new(Arc::new(Mutex::new(None))));
     });
 
     let log = (unsafe { &*LOG }).clone();
@@ -240,7 +244,9 @@ impl Log {
 impl Log {
     pub fn default_log(level: LogLevel, message: &str) {
         let message = CString::new(message).unwrap();
-        unsafe { ffi::fluid_default_log_function(level as _, message.as_ptr() as *mut _, null_mut()); }
+        unsafe {
+            ffi::fluid_default_log_function(level as _, message.as_ptr() as *mut _, null_mut());
+        }
     }
 }
 
@@ -249,8 +255,8 @@ pub use self::log::LogLogger;
 
 #[cfg(feature = "log")]
 mod log {
-    use log::{log, Level};
     use super::{LogLevel, Logger};
+    use log::{log, Level};
 
     /**
     Logger implementation backed by [log](https://crates.io/crates/log) crate.
@@ -297,11 +303,7 @@ mod log {
     }
 }
 
-extern "C" fn handler<T>(
-        level: raw::c_int,
-        message: *mut raw::c_char,
-        data: *mut raw::c_void,
-)
+extern "C" fn handler<T>(level: raw::c_int, message: *mut raw::c_char, data: *mut raw::c_void)
 where
     T: Logger,
 {

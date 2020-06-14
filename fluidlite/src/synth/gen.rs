@@ -1,5 +1,5 @@
+use crate::{ffi, Chan, Status, Synth};
 use num_derive::FromPrimitive;
-use crate::{ffi, Synth, Status, Chan};
 
 /**
 Generator (effect) numbers

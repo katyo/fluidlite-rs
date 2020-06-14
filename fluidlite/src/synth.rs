@@ -1,20 +1,20 @@
-mod midi;
-mod low;
-mod font;
-mod loader;
-mod reverb;
 mod chorus;
 mod count;
-mod params;
+mod font;
 mod gen;
-mod tuning;
+mod loader;
+mod low;
+mod midi;
 mod misc;
+mod params;
+mod reverb;
+mod tuning;
 mod write;
 
 pub use self::tuning::TuningIter;
 pub use self::write::IsSamples;
 
-use crate::{ffi, Settings, SettingsRef, Result, result_from_ptr};
+use crate::{ffi, result_from_ptr, Result, Settings, SettingsRef};
 
 /**
 The synth object
@@ -52,7 +52,9 @@ impl Synth {
     Set synth sample rate
      */
     pub fn set_sample_rate(&self, sample_rate: f32) {
-        unsafe { ffi::fluid_synth_set_sample_rate(self.handle, sample_rate); }
+        unsafe {
+            ffi::fluid_synth_set_sample_rate(self.handle, sample_rate);
+        }
     }
 
     /**
@@ -66,18 +68,17 @@ impl Synth {
 impl Drop for Synth {
     fn drop(&mut self) {
         let _settings = Settings::from_ptr(unsafe { ffi::fluid_synth_get_settings(self.handle) });
-        unsafe { ffi::delete_fluid_synth(self.handle); }
+        unsafe {
+            ffi::delete_fluid_synth(self.handle);
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::{
-        io::Write,
-        fs::File,
-    };
-    use byte_slice_cast::AsByteSlice;
     use super::{Settings, Synth};
+    use byte_slice_cast::AsByteSlice;
+    use std::{fs::File, io::Write};
 
     #[test]
     fn synth_sf2() {

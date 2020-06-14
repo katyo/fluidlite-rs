@@ -1,5 +1,5 @@
+use crate::{ffi, Bank, Chan, Ctrl, FontId, Key, PresetId, Prog, Result, Status, Synth, Val, Vel};
 use std::mem::MaybeUninit;
-use crate::{Synth, Result, Status, Chan, Key, Vel, Ctrl, Val, Prog, Bank, FontId, PresetId, ffi};
 
 /**
 MIDI channel messages
@@ -32,8 +32,10 @@ impl Synth {
     pub fn get_cc(&self, chan: Chan, ctrl: Ctrl) -> Result<Val> {
         let mut val = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_cc(self.handle, chan as _, ctrl as _, val.as_mut_ptr()) })
-            .map(|_| unsafe { val.assume_init() as _ })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_get_cc(self.handle, chan as _, ctrl as _, val.as_mut_ptr())
+        })
+        .map(|_| unsafe { val.assume_init() as _ })
     }
 
     /**
@@ -49,8 +51,10 @@ impl Synth {
     pub fn get_pitch_bend(&self, chan: Chan) -> Result<Val> {
         let mut pitch_bend = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_bend(self.handle, chan as _, pitch_bend.as_mut_ptr()) })
-            .map(|_| unsafe { pitch_bend.assume_init() as _ })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_get_pitch_bend(self.handle, chan as _, pitch_bend.as_mut_ptr())
+        })
+        .map(|_| unsafe { pitch_bend.assume_init() as _ })
     }
 
     /**
@@ -66,8 +70,10 @@ impl Synth {
     pub fn get_pitch_wheel_sens(&self, chan: Chan) -> Result<Val> {
         let mut val = MaybeUninit::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_get_pitch_wheel_sens(self.handle, chan as _, val.as_mut_ptr()) })
-            .map(|_| unsafe { val.assume_init() as _ })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_get_pitch_wheel_sens(self.handle, chan as _, val.as_mut_ptr())
+        })
+        .map(|_| unsafe { val.assume_init() as _ })
     }
 
     /**
@@ -113,8 +119,16 @@ impl Synth {
     allows any preset to be selected and circumvents preset masking
     due to previously loaded SoundFonts on the SoundFont stack.
      */
-    pub fn program_select(&self, chan: Chan, sfont_id: FontId, bank_num: Bank, preset_num: PresetId) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_program_select(self.handle, chan as _, sfont_id, bank_num, preset_num) })
+    pub fn program_select(
+        &self,
+        chan: Chan,
+        sfont_id: FontId,
+        bank_num: Bank,
+        preset_num: PresetId,
+    ) -> Status {
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_program_select(self.handle, chan as _, sfont_id, bank_num, preset_num)
+        })
     }
 
     /**
@@ -126,15 +140,21 @@ impl Synth {
         let mut preset_num = MaybeUninit::uninit();
 
         self.zero_ok(unsafe {
-            ffi::fluid_synth_get_program(self.handle, chan as _,
-			                                   sfont_id.as_mut_ptr(),
-			                                   bank_num.as_mut_ptr(),
-			                                   preset_num.as_mut_ptr())
-        }).map(|_| unsafe { (
-            sfont_id.assume_init(),
-            bank_num.assume_init(),
-            preset_num.assume_init(),
-        ) })
+            ffi::fluid_synth_get_program(
+                self.handle,
+                chan as _,
+                sfont_id.as_mut_ptr(),
+                bank_num.as_mut_ptr(),
+                preset_num.as_mut_ptr(),
+            )
+        })
+        .map(|_| unsafe {
+            (
+                sfont_id.assume_init(),
+                bank_num.assume_init(),
+                preset_num.assume_init(),
+            )
+        })
     }
 
     /**

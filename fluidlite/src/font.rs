@@ -1,5 +1,5 @@
+use crate::{ffi, Bank, FontId, PresetId};
 use std::marker::PhantomData;
-use crate::{ffi, FontId, Bank, PresetId};
 
 /**
 The SoundFont interface
@@ -30,7 +30,10 @@ pub struct FontRef<'a> {
 
 impl<'a> FontRef<'a> {
     pub(crate) fn from_ptr(handle: *mut ffi::fluid_sfont_t) -> Self {
-        Self { handle, phantom: PhantomData }
+        Self {
+            handle,
+            phantom: PhantomData,
+        }
     }
 
     pub(crate) fn as_ptr(&self) -> *mut ffi::fluid_sfont_t {
@@ -49,15 +52,24 @@ pub struct PresetRef<'a> {
 
 impl<'a> PresetRef<'a> {
     pub(crate) fn from_ptr(handle: *mut ffi::fluid_preset_t) -> Self {
-        Self { handle, phantom: PhantomData }
+        Self {
+            handle,
+            phantom: PhantomData,
+        }
     }
 }
 
 mod private {
+    use crate::{
+        ffi, option_from_ptr, private::HasHandle, Bank, FontId, FontRef, IsFont, IsPreset,
+        PresetId, PresetRef,
+    };
     use std::ffi::CStr;
-    use crate::{ffi, IsFont, FontRef, IsPreset, PresetRef, private::HasHandle, FontId, Bank, PresetId, option_from_ptr};
 
-    impl<X> IsFont for X where X: HasHandle<Handle = ffi::fluid_sfont_t> {
+    impl<X> IsFont for X
+    where
+        X: HasHandle<Handle = ffi::fluid_sfont_t>,
+    {
         fn get_id(&self) -> FontId {
             let handle = self.get_handle();
             let font_c = unsafe { &*handle };
@@ -77,8 +89,7 @@ mod private {
             let handle = self.get_handle();
             let font_c = unsafe { &*handle };
             let get_preset = font_c.get_preset?;
-            option_from_ptr(unsafe { (get_preset)(handle, bank, num) })
-                .map(PresetRef::from_ptr)
+            option_from_ptr(unsafe { (get_preset)(handle, bank, num) }).map(PresetRef::from_ptr)
         }
     }
 
@@ -90,7 +101,10 @@ mod private {
         }
     }
 
-    impl<X> IsPreset for X where X: HasHandle<Handle = ffi::fluid_preset_t> {
+    impl<X> IsPreset for X
+    where
+        X: HasHandle<Handle = ffi::fluid_preset_t>,
+    {
         fn get_name(&self) -> Option<&str> {
             let handle = self.get_handle();
             let font_c = unsafe { &*handle };

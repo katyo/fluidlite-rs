@@ -43,7 +43,10 @@ include!("bindings_sparc64.rs");
 #[cfg(all(not(feature = "generate-bindings"), target_arch = "x86"))]
 include!("bindings_x86.rs");
 
-#[cfg(all(not(feature = "generate-bindings"), any(target_arch = "x86_64", feature = "rustdoc")))]
+#[cfg(all(
+    not(feature = "generate-bindings"),
+    any(target_arch = "x86_64", feature = "rustdoc")
+))]
 include!("bindings_x86_64.rs");
 
 #[cfg(all(
@@ -59,4 +62,6 @@ include!("bindings_x86_64.rs");
     //not(target_arch = "sparc"),
     not(target_arch = "sparc64"),
 ))]
-compile_error!("Missing pre-generated bindings for target arch. Try enable 'generate-bindings' feature.");
+compile_error!(
+    "Missing pre-generated bindings for target arch. Try enable 'generate-bindings' feature."
+);

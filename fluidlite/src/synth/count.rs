@@ -1,4 +1,4 @@
-use crate::{Synth, ffi};
+use crate::{ffi, Synth};
 
 impl Synth {
     /**

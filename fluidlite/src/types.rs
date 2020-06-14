@@ -1,7 +1,7 @@
 use std::{
-    result::{Result as StdResult},
-    error::{Error as StdError},
+    error::Error as StdError,
     fmt::{Display, Formatter, Result as FmtResult},
+    result::Result as StdResult,
 };
 
 /// Channel number
@@ -55,7 +55,7 @@ impl Display for Error {
             Fluid(error) => {
                 "Fluidlite error: ".fmt(f)?;
                 error.fmt(f)
-            },
+            }
             Path => "Invalid path".fmt(f),
         }
     }

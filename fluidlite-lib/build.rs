@@ -6,29 +6,21 @@ mod source {
 fn main() {
     #[cfg(not(feature = "rustdoc"))]
     {
-        use std::{
-            env,
-            path::Path,
-        };
+        use std::{env, path::Path};
 
         let src = utils::Source::new(
             "fluidlite",
-            env::var("FLUIDLITE_VERSION")
-                .unwrap_or(source::VERSION.into()),
-            env::var("FLUIDLITE_URL")
-                .unwrap_or(source::URL.into()),
+            env::var("FLUIDLITE_VERSION").unwrap_or(source::VERSION.into()),
+            env::var("FLUIDLITE_URL").unwrap_or(source::URL.into()),
         );
 
-        let out_dir = env::var("OUT_DIR")
-            .expect("The OUT_DIR is set by cargo.");
+        let out_dir = env::var("OUT_DIR").expect("The OUT_DIR is set by cargo.");
 
         let out_dir = Path::new(&out_dir);
 
-        let src_dir = out_dir.join("source")
-            .join(&src.version);
+        let src_dir = out_dir.join("source").join(&src.version);
 
-        let bld_dir = out_dir.join("build")
-            .join(&src.version);
+        let bld_dir = out_dir.join("build").join(&src.version);
 
         utils::fetch_source(&src, &src_dir);
 
@@ -46,12 +38,22 @@ mod utils {
     }
 
     impl Source {
-        pub fn new(package: impl Into<String>, version: impl Into<String>, url: impl Into<String>) -> Self {
-            Self { package: package.into(), version: version.into(), url: url.into() }
+        pub fn new(
+            package: impl Into<String>,
+            version: impl Into<String>,
+            url: impl Into<String>,
+        ) -> Self {
+            Self {
+                package: package.into(),
+                version: version.into(),
+                url: url.into(),
+            }
         }
 
         pub fn url(&self) -> String {
-            self.url.replace("{package}", &self.package).replace("{version}", &self.version)
+            self.url
+                .replace("{package}", &self.package)
+                .replace("{version}", &self.version)
         }
     }
 
@@ -61,10 +63,12 @@ mod utils {
         if !out_dir.is_dir() {
             let src_url = src.url();
 
-            eprintln!("Fetch fluidlite from {} to {}",
-                      src_url, out_dir.display());
+            eprintln!("Fetch fluidlite from {} to {}", src_url, out_dir.display());
 
-            Fetch::from(src_url).unroll().strip_components(1).to(out_dir)
+            Fetch::from(src_url)
+                .unroll()
+                .strip_components(1)
+                .to(out_dir)
                 .expect("FluidLite sources should be fetched.");
         }
     }
@@ -82,7 +86,11 @@ mod utils {
     }
 
     pub fn bool_flag(flag: bool) -> &'static str {
-        if flag { "ON" } else { "OFF" }
+        if flag {
+            "ON"
+        } else {
+            "OFF"
+        }
     }
 
     pub fn compile_library(src_dir: &Path, out_dir: &Path) {
@@ -92,7 +100,10 @@ mod utils {
 
         let lib_name = "fluidlite";
 
-        if !lib_dir.join(lib_file(&lib_name, cfg!(feature = "shared"))).is_file() {
+        if !lib_dir
+            .join(lib_file(&lib_name, cfg!(feature = "shared")))
+            .is_file()
+        {
             std::fs::create_dir_all(out_dir).unwrap();
 
             Config::new(src_dir)
@@ -102,7 +113,6 @@ mod utils {
                 .define("STB_VORBIS", bool_flag(cfg!(feature = "with-stb")))
                 .define("CMAKE_C_COMPILER_WORKS", bool_flag(true))
                 .define("CMAKE_CXX_COMPILER_WORKS", bool_flag(true))
-
                 .always_configure(true)
                 .very_verbose(true)
                 .out_dir(out_dir)

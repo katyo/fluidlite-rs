@@ -39,17 +39,10 @@ You can apply some customizations to library using those features:
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        mem::MaybeUninit,
-        os::raw::c_int,
-    };
+    use std::{mem::MaybeUninit, os::raw::c_int};
 
     extern "C" {
-        pub fn fluid_version(
-            major: *mut c_int,
-            minor: *mut c_int,
-            micro: *mut c_int,
-        );
+        pub fn fluid_version(major: *mut c_int, minor: *mut c_int, micro: *mut c_int);
     }
 
     #[test]
@@ -58,9 +51,17 @@ mod tests {
         let mut minor = MaybeUninit::<i32>::uninit();
         let mut micro = MaybeUninit::<i32>::uninit();
 
-        unsafe { fluid_version(major.as_mut_ptr(), minor.as_mut_ptr(), micro.as_mut_ptr()); }
+        unsafe {
+            fluid_version(major.as_mut_ptr(), minor.as_mut_ptr(), micro.as_mut_ptr());
+        }
 
-        let version = unsafe { [major.assume_init(), minor.assume_init(), micro.assume_init()] };
+        let version = unsafe {
+            [
+                major.assume_init(),
+                minor.assume_init(),
+                micro.assume_init(),
+            ]
+        };
 
         assert_eq!(&version, &[1, 2, 0]);
     }

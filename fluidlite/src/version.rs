@@ -1,8 +1,8 @@
-use std::{
-    mem::MaybeUninit,
-    fmt::{Display, Formatter, Result as FmtResult},
-};
 use crate::ffi;
+use std::{
+    fmt::{Display, Formatter, Result as FmtResult},
+    mem::MaybeUninit,
+};
 
 /**
 The library version info
@@ -26,7 +26,11 @@ impl Display for Version {
 
 impl Version {
     pub fn new(major: u32, minor: u32, micro: u32) -> Self {
-        Self { major, minor, micro }
+        Self {
+            major,
+            minor,
+            micro,
+        }
     }
 
     pub fn get() -> Version {
@@ -34,11 +38,9 @@ impl Version {
         let mut minor = MaybeUninit::uninit();
         let mut micro = MaybeUninit::uninit();
 
-        unsafe { ffi::fluid_version(
-            major.as_mut_ptr(),
-            minor.as_mut_ptr(),
-            micro.as_mut_ptr(),
-        ); }
+        unsafe {
+            ffi::fluid_version(major.as_mut_ptr(), minor.as_mut_ptr(), micro.as_mut_ptr());
+        }
 
         Version::new(
             unsafe { major.assume_init() as _ },

@@ -30,7 +30,9 @@ impl Synth {
     Set the parameters for the built-in reverb unit
      */
     pub fn set_reverb_params(&self, roomsize: f64, damp: f64, width: f64, level: f64) {
-        unsafe { ffi::fluid_synth_set_reverb(self.handle, roomsize, damp, width, level); }
+        unsafe {
+            ffi::fluid_synth_set_reverb(self.handle, roomsize, damp, width, level);
+        }
     }
 
     /**
@@ -44,7 +46,9 @@ impl Synth {
     Turn on/off the built-in reverb unit
      */
     pub fn set_reverb_on(&self, on: bool) {
-        unsafe { ffi::fluid_synth_set_reverb_on(self.handle, on as _); }
+        unsafe {
+            ffi::fluid_synth_set_reverb_on(self.handle, on as _);
+        }
     }
 
     /**

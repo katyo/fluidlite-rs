@@ -1,13 +1,13 @@
+use crate::{ffi, result_from_ptr, Result};
 use std::{
+    ffi::CStr,
+    io::SeekFrom,
+    mem::{transmute, MaybeUninit},
+    os::raw::{c_char, c_int, c_long, c_void},
     path::Path,
-    io::{SeekFrom},
-    mem::{MaybeUninit, transmute},
-    os::raw::{c_void, c_char, c_int, c_long},
-    ffi::{CStr},
-    ptr::{null_mut},
-    slice::{from_raw_parts_mut},
+    ptr::null_mut,
+    slice::from_raw_parts_mut,
 };
-use crate::{Result, result_from_ptr, ffi};
 
 /**
 The file reading API
@@ -47,8 +47,7 @@ impl Loader {
     Create default SoundFont loader
      */
     pub fn new_default() -> Result<Self> {
-        result_from_ptr(unsafe { ffi::new_fluid_defsfloader() })
-            .map(|handle| Self { handle })
+        result_from_ptr(unsafe { ffi::new_fluid_defsfloader() }).map(|handle| Self { handle })
     }
 
     pub(crate) fn into_ptr(self) -> *mut ffi::fluid_sfloader_t {
@@ -68,20 +67,26 @@ impl Loader {
     Set the file reading API which will be used by loaders by default
      */
     pub fn set_default_file_api<F: FileApi>(fileapi: F) {
-        unsafe { ffi::fluid_set_default_fileapi(wrap_fileapi(fileapi)); }
+        unsafe {
+            ffi::fluid_set_default_fileapi(wrap_fileapi(fileapi));
+        }
     }
 
     /**
     Reset the file reading API which will be used by loaders by default
      */
     pub fn reset_default_file_api() {
-        unsafe { ffi::fluid_set_default_fileapi(null_mut()); }
+        unsafe {
+            ffi::fluid_set_default_fileapi(null_mut());
+        }
     }
 }
 
 impl Drop for Loader {
     fn drop(&mut self) {
-        unsafe { ffi::delete_fluid_defsfloader(self.handle); }
+        unsafe {
+            ffi::delete_fluid_defsfloader(self.handle);
+        }
     }
 }
 
@@ -109,7 +114,10 @@ extern "C" fn free_wrapper<F: FileApi>(fapi_c: *mut ffi::fluid_fileapi_t) -> c_i
     ffi::FLUID_OK
 }
 
-extern "C" fn open_wrapper<F: FileApi>(fapi_c: *mut ffi::fluid_fileapi_t, filename: *const c_char) -> *mut c_void {
+extern "C" fn open_wrapper<F: FileApi>(
+    fapi_c: *mut ffi::fluid_fileapi_t,
+    filename: *const c_char,
+) -> *mut c_void {
     let fapi = unsafe { &mut *fapi_c };
     let fapi_rs = unsafe { &mut *(fapi.data as *mut F) };
 
@@ -128,13 +136,14 @@ extern "C" fn open_wrapper<F: FileApi>(fapi_c: *mut ffi::fluid_fileapi_t, filena
     }
 }
 
-extern "C" fn read_wrapper<F: FileApi>(buf: *mut c_void, count: c_int, handle: *mut c_void) -> c_int {
+extern "C" fn read_wrapper<F: FileApi>(
+    buf: *mut c_void,
+    count: c_int,
+    handle: *mut c_void,
+) -> c_int {
     let handle = unsafe { &mut *(handle as *mut F::File) };
 
-    let buffer: &mut [u8] = unsafe { from_raw_parts_mut(
-        buf as _,
-        count as _,
-    ) };
+    let buffer: &mut [u8] = unsafe { from_raw_parts_mut(buf as _, count as _) };
 
     if F::read(handle, buffer) {
         ffi::FLUID_OK
@@ -143,7 +152,11 @@ extern "C" fn read_wrapper<F: FileApi>(buf: *mut c_void, count: c_int, handle: *
     }
 }
 
-extern "C" fn seek_wrapper<F: FileApi>(handle: *mut c_void, offset: c_long, origin: c_int) -> c_int {
+extern "C" fn seek_wrapper<F: FileApi>(
+    handle: *mut c_void,
+    offset: c_long,
+    origin: c_int,
+) -> c_int {
     let handle = unsafe { &mut *(handle as *mut F::File) };
 
     use self::SeekFrom::*;
@@ -180,12 +193,12 @@ extern "C" fn close_wrapper<F: FileApi>(handle: *mut c_void) -> c_int {
 
 #[cfg(test)]
 mod test {
+    use crate::{FileApi, Loader, Settings, Synth};
     use std::{
-        io::{Read, Seek, SeekFrom},
         fs::File,
+        io::{Read, Seek, SeekFrom},
         path::Path,
     };
-    use crate::{Settings, Synth, FileApi, Loader};
 
     struct TestFileApi;
 

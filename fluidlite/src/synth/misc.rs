@@ -1,5 +1,5 @@
+use crate::{ffi, Error, Result, Status, Synth};
 use std::ffi::CStr;
-use crate::{ffi, Synth, Result, Status, Error};
 
 impl Synth {
     /**

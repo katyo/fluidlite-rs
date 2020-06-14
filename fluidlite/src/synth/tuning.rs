@@ -1,10 +1,10 @@
+use crate::{ffi, Bank, Chan, Prog, Result, Status, Synth};
 use std::{
-    mem::MaybeUninit,
-    marker::PhantomData,
     ffi::{CStr, CString},
+    marker::PhantomData,
+    mem::MaybeUninit,
     ptr::null_mut,
 };
-use crate::{ffi, Synth, Result, Status, Chan, Bank, Prog};
 
 /**
  * Tuning
@@ -16,10 +16,23 @@ impl Synth {
     the pitch in cents of every key in cents. However, if 'pitches' is
     NULL, a new tuning is created with the well-tempered scale.
      */
-    pub fn create_key_tuning<S: AsRef<str>>(&self, tuning_bank: Bank, tuning_prog: Prog, name: S, pitch: &[f64; 128]) -> Status {
+    pub fn create_key_tuning<S: AsRef<str>>(
+        &self,
+        tuning_bank: Bank,
+        tuning_prog: Prog,
+        name: S,
+        pitch: &[f64; 128],
+    ) -> Status {
         let name = CString::new(name.as_ref()).unwrap();
-        self.zero_ok(unsafe { ffi::fluid_synth_create_key_tuning(
-            self.handle, tuning_bank as _, tuning_prog as _, name.as_ptr(), pitch.as_ptr() as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_create_key_tuning(
+                self.handle,
+                tuning_bank as _,
+                tuning_prog as _,
+                name.as_ptr(),
+                pitch.as_ptr() as _,
+            )
+        })
     }
 
     /**
@@ -29,16 +42,44 @@ impl Synth {
     pitches[0] equals -33, then the C-keys will be tuned 33 cents
     below the well-tempered C.
      */
-    pub fn create_octave_tuning<S: AsRef<str>>(&self, tuning_bank: Bank, tuning_prog: Prog, name: S, pitch: &[f64; 12]) -> Status {
+    pub fn create_octave_tuning<S: AsRef<str>>(
+        &self,
+        tuning_bank: Bank,
+        tuning_prog: Prog,
+        name: S,
+        pitch: &[f64; 12],
+    ) -> Status {
         let name = CString::new(name.as_ref()).unwrap();
-        self.zero_ok(unsafe { ffi::fluid_synth_create_octave_tuning(
-            self.handle, tuning_bank as _, tuning_prog as _, name.as_ptr(), pitch.as_ptr()) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_create_octave_tuning(
+                self.handle,
+                tuning_bank as _,
+                tuning_prog as _,
+                name.as_ptr(),
+                pitch.as_ptr(),
+            )
+        })
     }
 
-    pub fn activate_octave_tuning<S: AsRef<str>>(&self, bank: Bank, prog: Prog, name: S, pitch: &[f64; 12], apply: bool) -> Status {
+    pub fn activate_octave_tuning<S: AsRef<str>>(
+        &self,
+        bank: Bank,
+        prog: Prog,
+        name: S,
+        pitch: &[f64; 12],
+        apply: bool,
+    ) -> Status {
         let name = CString::new(name.as_ref()).unwrap();
-        self.zero_ok(unsafe { ffi::fluid_synth_activate_octave_tuning(
-            self.handle, bank as _, prog as _, name.as_ptr(), pitch.as_ptr(), apply as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_activate_octave_tuning(
+                self.handle,
+                bank as _,
+                prog as _,
+                name.as_ptr(),
+                pitch.as_ptr(),
+                apply as _,
+            )
+        })
     }
 
     /**
@@ -48,7 +89,14 @@ impl Synth {
     will have their pitch updated. 'APPLY' IS CURRENTLY IGNORED. The
     changes will be available for newly triggered notes only.
      */
-    pub fn tune_notes<K, P>(&self, tuning_bank: Bank, tuning_prog: Prog, keys: K, pitch: P, apply: bool) -> Status
+    pub fn tune_notes<K, P>(
+        &self,
+        tuning_bank: Bank,
+        tuning_prog: Prog,
+        keys: K,
+        pitch: P,
+        apply: bool,
+    ) -> Status
     where
         K: AsRef<[u32]>,
         P: AsRef<[f64]>,
@@ -56,19 +104,43 @@ impl Synth {
         let keys = keys.as_ref();
         let pitch = pitch.as_ref();
         let len = keys.len().min(pitch.len());
-        self.zero_ok(unsafe { ffi::fluid_synth_tune_notes(
-            self.handle, tuning_bank as _, tuning_prog as _, len as _, keys.as_ptr() as _, pitch.as_ptr() as _, apply as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_tune_notes(
+                self.handle,
+                tuning_bank as _,
+                tuning_prog as _,
+                len as _,
+                keys.as_ptr() as _,
+                pitch.as_ptr() as _,
+                apply as _,
+            )
+        })
     }
 
     /**
     Select a tuning for a channel.
      */
     pub fn select_tuning(&self, chan: Chan, tuning_bank: Bank, tuning_prog: Prog) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_select_tuning(self.handle, chan as _, tuning_bank as _, tuning_prog as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_select_tuning(
+                self.handle,
+                chan as _,
+                tuning_bank as _,
+                tuning_prog as _,
+            )
+        })
     }
 
     pub fn activate_tuning(&self, chan: Chan, bank: Bank, prog: Prog, apply: bool) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_activate_tuning(self.handle, chan as _, bank as _, prog as _, apply as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_activate_tuning(
+                self.handle,
+                chan as _,
+                bank as _,
+                prog as _,
+                apply as _,
+            )
+        })
     }
 
     /**
@@ -96,10 +168,21 @@ impl Synth {
         let mut name = MaybeUninit::<[u8; NAME_LEN]>::uninit();
         let mut pitch = MaybeUninit::<[f64; 128]>::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_tuning_dump(
-            self.handle, bank as _, prog as _, name.as_mut_ptr() as _, NAME_LEN as _, pitch.as_mut_ptr() as _) })?;
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_tuning_dump(
+                self.handle,
+                bank as _,
+                prog as _,
+                name.as_mut_ptr() as _,
+                NAME_LEN as _,
+                pitch.as_mut_ptr() as _,
+            )
+        })?;
         Ok((
-            (unsafe { CStr::from_ptr(name.as_ptr() as _) }).to_str().unwrap().into(),
+            (unsafe { CStr::from_ptr(name.as_ptr() as _) })
+                .to_str()
+                .unwrap()
+                .into(),
             unsafe { pitch.assume_init() },
         ))
     }
@@ -114,9 +197,20 @@ impl Synth {
 
         let mut name = MaybeUninit::<[u8; NAME_LEN]>::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_tuning_dump(
-            self.handle, bank as _, prog as _, name.as_mut_ptr() as _, NAME_LEN as _, null_mut()) })?;
-        Ok((unsafe { CStr::from_ptr(name.as_ptr() as _) }).to_str().unwrap().into())
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_tuning_dump(
+                self.handle,
+                bank as _,
+                prog as _,
+                name.as_mut_ptr() as _,
+                NAME_LEN as _,
+                null_mut(),
+            )
+        })?;
+        Ok((unsafe { CStr::from_ptr(name.as_ptr() as _) })
+            .to_str()
+            .unwrap()
+            .into())
     }
 
     /**
@@ -127,8 +221,16 @@ impl Synth {
     pub fn tuning_dump_pitch(&self, bank: Bank, prog: Prog) -> Result<[f64; 128]> {
         let mut pitch = MaybeUninit::<[f64; 128]>::uninit();
 
-        self.zero_ok(unsafe { ffi::fluid_synth_tuning_dump(
-            self.handle, bank as _, prog as _, null_mut(), 0, pitch.as_mut_ptr() as _) })?;
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_tuning_dump(
+                self.handle,
+                bank as _,
+                prog as _,
+                null_mut(),
+                0,
+                pitch.as_mut_ptr() as _,
+            )
+        })?;
         Ok(unsafe { pitch.assume_init() })
     }
 }
@@ -145,7 +247,12 @@ pub struct TuningIter<'a> {
 
 impl<'a> TuningIter<'a> {
     fn from_ptr(handle: *mut ffi::fluid_synth_t) -> Self {
-        Self { handle, phantom: PhantomData, init: true, next: true }
+        Self {
+            handle,
+            phantom: PhantomData,
+            init: true,
+            next: true,
+        }
     }
 }
 
@@ -155,18 +262,25 @@ impl<'a> Iterator for TuningIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         if self.init {
             self.init = false;
-            unsafe { ffi::fluid_synth_tuning_iteration_start(self.handle); }
+            unsafe {
+                ffi::fluid_synth_tuning_iteration_start(self.handle);
+            }
         }
         if self.next {
             let mut bank = MaybeUninit::uninit();
             let mut prog = MaybeUninit::uninit();
-            self.next = 0 != unsafe { ffi::fluid_synth_tuning_iteration_next(
-                self.handle, bank.as_mut_ptr(), prog.as_mut_ptr()) };
+            self.next = 0
+                != unsafe {
+                    ffi::fluid_synth_tuning_iteration_next(
+                        self.handle,
+                        bank.as_mut_ptr(),
+                        prog.as_mut_ptr(),
+                    )
+                };
 
-            Some((
-                unsafe { bank.assume_init() as _ },
-                unsafe { prog.assume_init() as _ },
-            ))
+            Some((unsafe { bank.assume_init() as _ }, unsafe {
+                prog.assume_init() as _
+            }))
         } else {
             None
         }

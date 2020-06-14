@@ -1,5 +1,5 @@
+use crate::{ffi, Status, Synth};
 use num_derive::FromPrimitive;
-use crate::{ffi, Synth, Status};
 
 /* Flags to choose the interpolation method */
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
@@ -38,7 +38,9 @@ impl Synth {
     Set the master gain
      */
     pub fn set_gain(&self, gain: f32) {
-        unsafe { ffi::fluid_synth_set_gain(self.handle, gain); }
+        unsafe {
+            ffi::fluid_synth_set_gain(self.handle, gain);
+        }
     }
 
     /**
@@ -79,6 +81,8 @@ impl Synth {
     /** Set the interpolation method for one channel (`Some(chan)`) or all channels (`None`) */
     pub fn set_interp_method(&self, chan: Option<u32>, interp_method: InterpMethod) -> Status {
         let chan = if let Some(chan) = chan { chan as _ } else { -1 };
-        self.zero_ok(unsafe { ffi::fluid_synth_set_interp_method(self.handle, chan, interp_method as _) })
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_set_interp_method(self.handle, chan, interp_method as _)
+        })
     }
 }
