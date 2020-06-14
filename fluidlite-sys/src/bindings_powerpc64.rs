@@ -371,6 +371,14 @@ extern "C" {
     ) -> ::std::os::raw::c_int;
 }
 extern "C" {
+    pub fn fluid_synth_key_pressure(
+        synth: *mut fluid_synth_t,
+        chan: ::std::os::raw::c_int,
+        key: ::std::os::raw::c_int,
+        val: ::std::os::raw::c_int,
+    ) -> ::std::os::raw::c_int;
+}
+extern "C" {
     pub fn fluid_synth_sysex(
         synth: *mut fluid_synth_t,
         data: *const ::std::os::raw::c_char,

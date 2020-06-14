@@ -1,7 +1,7 @@
 #[cfg(feature = "generate-bindings")]
 mod source {
     pub const URL: &str = "https://github.com/katyo/{package}/archive/{version}.tar.gz";
-    pub const VERSION: &str = "1.2.0";
+    pub const VERSION: &str = "1.2.1";
 }
 
 fn main() {
