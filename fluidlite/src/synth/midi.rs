@@ -77,8 +77,20 @@ impl Synth {
         self.zero_ok(unsafe { ffi::fluid_synth_program_change(self.handle, chan as _, prog as _) })
     }
 
+    /**
+    Set channel pressure
+     */
     pub fn channel_pressure(&self, chan: Chan, val: Val) -> Status {
         self.zero_ok(unsafe { ffi::fluid_synth_channel_pressure(self.handle, chan as _, val as _) })
+    }
+
+    /**
+    Set key pressure (aftertouch)
+     */
+    pub fn key_pressure(&self, chan: Chan, key: Key, val: Val) -> Status {
+        self.zero_ok(unsafe {
+            ffi::fluid_synth_key_pressure(self.handle, chan as _, key as _, val as _)
+        })
     }
 
     /**
