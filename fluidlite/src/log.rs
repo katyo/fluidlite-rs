@@ -180,7 +180,7 @@ impl Drop for Log {
 
 impl Log {
     /// Create and install logger
-    fn new<'a, I, T>(levels: I, logger: T) -> Self
+    fn new<I, T>(levels: I, logger: T) -> Self
     where
         T: Logger + 'static,
         I: AsRef<[LogLevel]>,
@@ -220,7 +220,7 @@ fn with_global_logger(func: impl FnOnce(&mut Option<Log>)) {
 
 impl Log {
     /// Set logger
-    pub fn set<'a, I, T>(levels: I, logger: T)
+    pub fn set<I, T>(levels: I, logger: T)
     where
         T: Logger + 'static,
         I: AsRef<[LogLevel]>,

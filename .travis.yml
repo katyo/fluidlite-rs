@@ -11,12 +11,14 @@ cache:
   cargo: true
 before_install:
 - |-
+    rustup component add rustfmt clippy
     case $TRAVIS_OS_NAME in
       windows)
         choco upgrade --no-progress -y pkgconfiglite make
         ;;
     esac
 script:
+- if [ "$TRAVIS_RUST_VERSION" != "nightly" ]; then cargo fmt && cargo fmt -- --check && cargo clippy -- -D warnings; fi
 - (cd fluidlite-sys && cargo test --release)
 - (cd fluidlite-lib && cargo test --release)
 - (cd fluidlite-lib && cargo test --release --features with-sf3)

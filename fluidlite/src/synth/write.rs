@@ -51,8 +51,12 @@ impl Synth {
     /**
     Write samples as 16-bit signed integers
 
-    __Note__: The `len` must corresponds to the lenghtes of buffers.
+    # Safety
+
+    The `len` must corresponds to the lenghtes of buffers.
      */
+    #[allow(clippy::missing_safety_doc)] // TODO: Remove after closing https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::too_many_arguments)]
     #[inline]
     pub unsafe fn write_i16(
         &self,
@@ -79,8 +83,12 @@ impl Synth {
     /**
     Write samples as 32-bit floating-point numbers
 
-    __Note__: The `len` must corresponds to the lenghtes of buffers.
+    # Safety
+
+    The `len` must corresponds to the lenghtes of buffers.
      */
+    #[allow(clippy::missing_safety_doc)] // TODO: Remove after closing https://github.com/rust-lang/rust-clippy/issues/5593
+    #[allow(clippy::too_many_arguments)]
     #[inline]
     pub unsafe fn write_f32(
         &self,

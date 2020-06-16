@@ -11,8 +11,8 @@ fn main() {
 
         let src = utils::Source::new(
             "fluidlite",
-            env::var("FLUIDLITE_VERSION").unwrap_or(source::VERSION.into()),
-            env::var("FLUIDLITE_URL").unwrap_or(source::URL.into()),
+            env::var("FLUIDLITE_VERSION").unwrap_or_else(|_| source::VERSION.into()),
+            env::var("FLUIDLITE_URL").unwrap_or_else(|_| source::URL.into()),
         );
 
         let out_dir = env::var("OUT_DIR").expect("The OUT_DIR is set by cargo.");
