@@ -160,7 +160,7 @@ impl<F: FnMut(LogLevel, &str)> Logger for FnLogger<F> {
  */
 pub struct Log {
     levels: Vec<LogLevel>,
-    #[used]
+    #[allow(unused)]
     logger: Box<dyn Logger>,
 }
 
