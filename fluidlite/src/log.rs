@@ -15,33 +15,33 @@ pub enum LogLevel {
     /**
      * The synth can't function correctly any more
      */
-    Panic = ffi::fluid_log_level_FLUID_PANIC,
+    Panic = ffi::fluid_log_level_FLUID_PANIC as _,
 
     /**
      * Serious error occurred
      */
-    Error = ffi::fluid_log_level_FLUID_ERR,
+    Error = ffi::fluid_log_level_FLUID_ERR as _,
 
     /**
      * Warning
      */
-    Warning = ffi::fluid_log_level_FLUID_WARN,
+    Warning = ffi::fluid_log_level_FLUID_WARN as _,
 
     /**
      * Verbose informational messages
      */
-    Info = ffi::fluid_log_level_FLUID_INFO,
+    Info = ffi::fluid_log_level_FLUID_INFO as _,
 
     /**
      * Debugging messages
      */
-    Debug = ffi::fluid_log_level_FLUID_DBG,
+    Debug = ffi::fluid_log_level_FLUID_DBG as _,
 }
 
 impl LogLevel {
     fn from_ffi(level: i32) -> Option<Self> {
         use self::LogLevel::*;
-        Some(match level as u32 {
+        Some(match level as _ {
             ffi::fluid_log_level_FLUID_PANIC => Panic,
             ffi::fluid_log_level_FLUID_ERR => Error,
             ffi::fluid_log_level_FLUID_WARN => Warning,

@@ -8,20 +8,20 @@ pub enum InterpMethod {
     /**
     No interpolation: Fastest, but questionable audio quality
      */
-    None = ffi::fluid_interp_FLUID_INTERP_NONE,
+    None = ffi::fluid_interp_FLUID_INTERP_NONE as _,
     /**
     Straight-line interpolation: A bit slower, reasonable audio quality
      */
-    Linear = ffi::fluid_interp_FLUID_INTERP_LINEAR,
+    Linear = ffi::fluid_interp_FLUID_INTERP_LINEAR as _,
     /**
     Fourth-order interpolation: Requires 50% of the whole DSP processing time, good quality
     (default)
      */
-    FourthOrder = ffi::fluid_interp_FLUID_INTERP_4THORDER,
+    FourthOrder = ffi::fluid_interp_FLUID_INTERP_4THORDER as _,
     /**
     Seventh-order interpolation
      */
-    SeventhOrder = ffi::fluid_interp_FLUID_INTERP_7THORDER,
+    SeventhOrder = ffi::fluid_interp_FLUID_INTERP_7THORDER as _,
 }
 
 impl Default for InterpMethod {

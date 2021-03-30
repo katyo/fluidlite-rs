@@ -8,8 +8,8 @@ Chorus type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
 #[repr(u32)]
 pub enum ChorusMode {
-    Sine = ffi::fluid_chorus_mod_FLUID_CHORUS_MOD_SINE,
-    Triangle = ffi::fluid_chorus_mod_FLUID_CHORUS_MOD_TRIANGLE,
+    Sine = ffi::fluid_chorus_mod_FLUID_CHORUS_MOD_SINE as _,
+    Triangle = ffi::fluid_chorus_mod_FLUID_CHORUS_MOD_TRIANGLE as _,
 }
 
 impl Default for ChorusMode {
