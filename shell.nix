@@ -1,10 +1,10 @@
 { pkgs ? import <nixpkgs> {}, ... }:
 with pkgs;
 let
-  llvmPackages = llvmPackages_latest;
-  clang = llvmPackages.clang-polly-unwrapped;
+  llvmPackages = llvmPackages_11;
+  clang = llvmPackages.clang-unwrapped;
   libclang = llvmPackages.libclang;
-  llvm = llvmPackages.llvm-polly;
+  llvm = llvmPackages.llvm;
 
   stdenv = llvmPackages.stdenv;
 
