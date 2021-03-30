@@ -489,6 +489,22 @@ impl<'a> Setting<'a, i32> {
 mod test {
     use super::*;
 
+    macro_rules! assert_eqf {
+        ($a:expr, $b:expr) => {{
+            let eps = 1.0e-6;
+            let (a, b) = (&$a, &$b);
+            assert!(
+                (*a - *b).abs() < eps,
+                "assertion failed: `(left !== right)` \
+                 (left: `{:?}`, right: `{:?}`, expect diff: `{:?}`, real diff: `{:?}`)",
+                *a,
+                *b,
+                eps,
+                (*a - *b).abs()
+            );
+        }};
+    }
+
     #[test]
     fn settings() {
         let settings = Settings::new().unwrap();
@@ -501,13 +517,13 @@ mod test {
         let settings = Settings::new().unwrap();
         let gain = settings.num("synth.gain").unwrap();
 
-        assert_eq!(gain.default(), 0.2f32 as f64);
+        assert_eqf!(gain.default(), 0.2);
         //assert_eq!(gain.range().min, Some(0.0));
         //assert_eq!(gain.range().max, Some(10.0));
 
-        assert_eq!(gain.get(), Some(0.2f32 as f64));
+        assert_eqf!(gain.get().unwrap(), 0.2);
         assert!(gain.set(0.5));
-        assert_eq!(gain.get(), Some(0.5));
+        assert_eqf!(gain.get().unwrap(), 0.5);
     }
 
     #[test]
@@ -544,6 +560,6 @@ mod test {
 
         let gain = settings_ref.num("synth.gain").unwrap();
 
-        assert_eq!(gain.default(), 0.2f32 as f64);
+        assert_eqf!(gain.default(), 0.2);
     }
 }
