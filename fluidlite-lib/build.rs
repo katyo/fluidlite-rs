@@ -1,3 +1,4 @@
+#[cfg(not(feature = "rustdoc"))]
 mod source {
     pub const URL: &str = "https://github.com/katyo/{package}/archive/{version}.tar.gz";
     pub const VERSION: &str = "1.2.1";
@@ -23,6 +24,7 @@ fn main() {
     }
 }
 
+#[cfg(not(feature = "rustdoc"))]
 mod utils {
     use std::path::Path;
 

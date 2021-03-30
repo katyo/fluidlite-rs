@@ -13,7 +13,7 @@ impl Synth {
     is found.
      */
     pub fn sfload<P: AsRef<Path>>(&self, filename: P, reset_presets: bool) -> Result<FontId> {
-        let filename = filename.as_ref().to_str().ok_or_else(|| Error::Path)?;
+        let filename = filename.as_ref().to_str().ok_or(Error::Path)?;
         let filename = CString::new(filename).map_err(|_| Error::Path)?;
 
         self.neg_err(unsafe {

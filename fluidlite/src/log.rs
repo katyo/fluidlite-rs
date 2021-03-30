@@ -251,10 +251,10 @@ impl Log {
 }
 
 #[cfg(feature = "log")]
-pub use self::log::LogLogger;
+pub use logger::LogLogger;
 
 #[cfg(feature = "log")]
-mod log {
+mod logger {
     use super::{LogLevel, Logger};
     use log::{log, Level};
 
@@ -290,9 +290,9 @@ mod log {
         }
     }
 
-    impl Into<Level> for LogLevel {
-        fn into(self) -> Level {
-            match self {
+    impl From<LogLevel> for Level {
+        fn from(level: LogLevel) -> Self {
+            match level {
                 LogLevel::Panic => Level::Error,
                 LogLevel::Error => Level::Error,
                 LogLevel::Warning => Level::Warn,
