@@ -25,11 +25,16 @@ status = "passively-maintained"
 [build-dependencies.fetch_unroll]
 version = "^0.3"
 
-[build-dependencies.cmake]
-version = "^0.1"
+[build-dependencies.pkg-config]
+version = "^0.3.3"
+
+[build-dependencies.cc]
+version = "^1"
+features = ["parallel"]
 
 [features]
 shared = []
+static = []
 with-sf3 = []
 with-stb = []
 rustdoc = []
