@@ -496,16 +496,22 @@ mod test {
         drop(settings);
     }
 
+    #[cfg(target_pointer_width = "32")]
+    const DEFAULT_GAIN: f64 = 0.2;
+
+    #[cfg(target_pointer_width = "64")]
+    const DEFAULT_GAIN: f64 = 0.20000000298023224;
+
     #[test]
     fn num_setting() {
         let settings = Settings::new().unwrap();
         let gain = settings.num("synth.gain").unwrap();
 
-        assert_eq!(gain.default(), 0.2f32 as f64);
+        assert_eq!(gain.default(), DEFAULT_GAIN);
         //assert_eq!(gain.range().min, Some(0.0));
         //assert_eq!(gain.range().max, Some(10.0));
 
-        assert_eq!(gain.get(), Some(0.2f32 as f64));
+        assert_eq!(gain.get(), Some(DEFAULT_GAIN));
         assert!(gain.set(0.5));
         assert_eq!(gain.get(), Some(0.5));
     }
@@ -544,6 +550,6 @@ mod test {
 
         let gain = settings_ref.num("synth.gain").unwrap();
 
-        assert_eq!(gain.default(), 0.2f32 as f64);
+        assert_eq!(gain.default(), DEFAULT_GAIN);
     }
 }
