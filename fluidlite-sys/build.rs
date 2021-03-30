@@ -5,10 +5,38 @@ mod source {
 }
 
 fn main() {
+    #[cfg(any(not(feature = "generate-bindings"), feature = "update-bindings"))]
+    use std::path::PathBuf;
+    use std::{env, path::Path};
+
+    #[cfg(any(not(feature = "generate-bindings"), feature = "update-bindings"))]
+    fn bindings_filename() -> String {
+        format!(
+            "{}-{}-{}.rs",
+            env::var("CARGO_CFG_TARGET_ARCH").unwrap(),
+            env::var("CARGO_CFG_TARGET_OS").unwrap(),
+            env::var("CARGO_CFG_TARGET_ENV").unwrap()
+        )
+    }
+
+    #[cfg(any(not(feature = "generate-bindings"), feature = "update-bindings"))]
+    fn bindings_filepath(filename: &str) -> PathBuf {
+        Path::new("src").join("bindings").join(filename)
+    }
+
+    #[cfg(not(feature = "generate-bindings"))]
+    {
+        let bindings_file = bindings_filename();
+
+        if bindings_filepath(&bindings_file).is_file() {
+            println!("cargo:rustc-env=FLUIDLITE_BINDINGS={}", bindings_file);
+        } else {
+            panic!("No prebuilt bindings. Try use `generate-bindings` feature.",);
+        }
+    }
+
     #[cfg(feature = "generate-bindings")]
     {
-        use std::{env, path::Path};
-
         let src = utils::Source::new(
             "fluidlite",
             env::var("FLUIDLITE_VERSION").unwrap_or_else(|_| source::VERSION.into()),
@@ -27,6 +55,12 @@ fn main() {
         let bindings = out_dir.join("bindings.rs");
 
         utils::generate_bindings(&inc_dir, &bindings);
+
+        #[cfg(feature = "update-bindings")]
+        {
+            let out_path = bindings_filepath(&bindings_filename());
+            utils::update_bindings(&bindings, &out_path);
+        }
     }
 }
 
@@ -91,5 +125,27 @@ mod utils {
             .expect("Generated bindings.");
 
         bindings.write_to_file(out_file).expect("Written bindings.");
+    }
+
+    #[cfg(feature = "update-bindings")]
+    pub fn update_bindings(bind_file: &Path, dest_file: &Path) {
+        use std::{env, fs, io::Write};
+
+        fs::create_dir_all(&dest_file.parent().unwrap()).unwrap();
+        fs::copy(&bind_file, &dest_file).unwrap();
+
+        if let Ok(github_env) = env::var("GITHUB_ENV") {
+            let mut env_file = fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(github_env)
+                .unwrap();
+            writeln!(
+                env_file,
+                "FLUIDLITE_SYS_BINDINGS_FILE={}",
+                dest_file.display()
+            )
+            .unwrap();
+        }
     }
 }
