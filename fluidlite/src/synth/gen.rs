@@ -1,12 +1,11 @@
 use crate::{ffi, Chan, Status, Synth};
-use num_derive::FromPrimitive;
 
 /**
 Generator (effect) numbers
 
 See also _Soundfont 2.01 specifications section 8.1.3_
  */
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum GenParam {
     /** Sample start address offset (0-32767) */

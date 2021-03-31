@@ -1,8 +1,7 @@
 use crate::{ffi, Status, Synth};
-use num_derive::FromPrimitive;
 
 /* Flags to choose the interpolation method */
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum InterpMethod {
     /**

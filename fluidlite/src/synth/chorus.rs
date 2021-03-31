@@ -1,11 +1,9 @@
 use crate::{ffi, Synth};
-use num_derive::FromPrimitive;
-use num_traits::FromPrimitive;
 
 /**
 Chorus type
  */
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum ChorusMode {
     Sine = ffi::fluid_chorus_mod_FLUID_CHORUS_MOD_SINE as _,
@@ -114,7 +112,7 @@ impl Synth {
     Query the current chorus mode
      */
     pub fn get_chorus_mode(&self) -> ChorusMode {
-        ChorusMode::from_i32(unsafe { ffi::fluid_synth_get_chorus_type(self.handle) }).unwrap()
+        unsafe { core::mem::transmute(ffi::fluid_synth_get_chorus_type(self.handle)) }
     }
 
     /**
