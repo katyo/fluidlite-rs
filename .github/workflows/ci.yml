@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -32,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -52,6 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
@@ -65,21 +71,23 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all --all-features
 
-  check-minimal:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          profile: minimal
-          default: true
-          override: true
-      - uses: Swatinem/rust-cache@v1
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --all --all-features -Z minimal-versions
+  # minver:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: true
+  #     - uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly
+  #         profile: minimal
+  #         default: true
+  #         override: true
+  #     - uses: Swatinem/rust-cache@v1
+  #     - uses: actions-rs/cargo@v1
+  #       with:
+  #         command: check
+  #         args: --all --all-features -Z minimal-versions
 
   test:
     needs:
@@ -95,98 +103,134 @@ jobs:
             os: ubuntu-latest
             rust: stable
             target: i686-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: x86_64-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: arm-unknown-linux-gnueabihf
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: armv7-unknown-linux-gnueabihf
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: aarch64-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: mips-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: mips64-unknown-linux-gnuabi64
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: mipsel-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: mips64el-unknown-linux-gnuabi64
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: powerpc-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: powerpc64-unknown-linux-gnu
+            features: default
           - task: bindings
             os: ubuntu-latest
             rust: stable
             target: sparc64-unknown-linux-gnu
+            features: default
           - task: bindings
             os: macos-latest
             rust: stable
             target: x86_64-apple-darwin
+            features: default
           #- task: bindings
           #  os: macos-latest
           #  rust: stable
           #  target: aarch64-apple-darwin
+          #  features: default
           - task: bindings
             os: windows-latest
             rust: stable
             target: i686-pc-windows-gnu
+            features: default
           - task: bindings
             os: windows-latest
             rust: stable
             target: x86_64-pc-windows-gnu
+            features: default
           - task: bindings
             os: windows-latest
             rust: stable
             target: i686-pc-windows-msvc
+            features: default
           - task: bindings
             os: windows-latest
             rust: stable
             target: x86_64-pc-windows-msvc
+            features: default
           #- task: bindings
           #  os: ubuntu-latest
           #  rust: stable
           #  target: wasm32-unknown-emscripten
+          #  features: default
           #- task: bindings
           #  os: ubuntu-latest
           #  rust: stable
           #  target: wasm32-wasi
+          #  features: default
+          # Test features
+          - task: features
+            os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+            features: pkg-config,builtin,with-sf3
+          - task: features
+            os: ubuntu-latest
+            rust: stable
+            target: x86_64-unknown-linux-gnu
+            features: pkg-config,builtin,with-sf3,with-stb
           # Test channels
           - task: channels
             os: ubuntu-latest
             rust: stable
             target: x86_64-unknown-linux-gnu
+            features: default
           - task: channels
             os: ubuntu-latest
             rust: beta
             target: x86_64-unknown-linux-gnu
+            features: default
           - task: channels
             os: ubuntu-latest
             rust: nightly
             target: x86_64-unknown-linux-gnu
+            features: default
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup cross linux toolchain
         if: contains(matrix.target, '-linux-') && !startsWith(matrix.target, 'x86_64-')
         run: |
@@ -198,6 +242,19 @@ jobs:
           echo "CC_${ENV_TARGET}=${GCC_TARGET}-gcc" >> $GITHUB_ENV
           echo "CARGO_TARGET_${ENV_TARGET_UC}_LINKER=${GCC_TARGET}-gcc" >> $GITHUB_ENV
           echo "BINDGEN_EXTRA_CLANG_ARGS=--sysroot=/usr/${GCC_TARGET}" >> $GITHUB_ENV
+          case "${{ matrix.target }}" in
+            x86_64-* | i686-*) ;;
+            *)
+            echo "CARGO_TEST_ARGS=--no-run" >> $GITHUB_ENV
+            #sudo apt-get install -y qemu-user-static
+            #QEMU_ARCH=$(printf "${{ matrix.target }}" | sed 's/\([^-]*\)-.*/\1/' | sed 's/powerpc/ppc/')
+            #echo "CARGO_TARGET_${ENV_TARGET_UC}_RUNNER=qemu-${QEMU_ARCH}-static" >> $GITHUB_ENV
+            ;;
+          esac
+      - name: Install packages
+        if: matrix.task == 'features'
+        run: |
+          sudo apt-get install -y libvorbis-dev libogg-dev
       - name: Setup clang on windows
         if: startsWith(matrix.os, 'windows')
         uses: KyleMayes/install-llvm-action@v1
@@ -218,7 +275,8 @@ jobs:
       - name: Setup emscripten toolchain
         if: startsWith(matrix.target, 'wasm32-') && endsWith(matrix.target, '-emscripten')
         uses: mymindstorm/setup-emsdk@v7
-      - if: startsWith(matrix.target, 'wasm32-') && endsWith(matrix.target, '-emscripten')
+      - name: Prepare env for emscripten
+        if: startsWith(matrix.target, 'wasm32-') && endsWith(matrix.target, '-emscripten')
         run: |
           echo "CC_wasm32_unknown_emscripten=${EMSDK}/upstream/emscripten/bin/emcc" >> $GITHUB_ENV
           echo "BINDGEN_EXTRA_CLANG_ARGS=--sysroot=${EMSDK}/upstream/emscripten/cache/sysroot" >> $GITHUB_ENV
@@ -265,16 +323,15 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target ${{ matrix.target }}
+          args: --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }}
       - name: Test
-        if: contains(matrix.target, '-linux-') && (startsWith(matrix.target, 'x86_64-') || startsWith(matrix.target, 'i686-'))
         uses: actions-rs/cargo@v1
         timeout-minutes: 12
         env:
           RUST_BACKTRACE: full
         with:
           command: test
-          args: --all --target ${{ matrix.target }}
+          args: --all --target ${{ matrix.target }} --no-default-features --features ${{ matrix.features }} ${{ env.CARGO_TEST_ARGS }}
 
   update-bindings:
     if: ${{ github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/') }}
@@ -283,6 +340,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Download bindings
         uses: actions/download-artifact@v2
         with:
@@ -301,11 +360,12 @@ jobs:
   publish:
     if: github.repository == 'katyo/fluidlite-rs' && startsWith(github.ref, 'refs/tags/')
     needs:
-      - check-minimal
       - test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
