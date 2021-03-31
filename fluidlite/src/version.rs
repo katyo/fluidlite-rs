@@ -58,7 +58,7 @@ mod test {
     fn version() {
         let ver = Version::get();
 
-        assert_eq!(ver, Version::new(1, 2, 0));
-        assert_eq!(ver.to_string(), "1.2.0");
+        assert_eq!(ver, Version::new(1, 2, 1));
+        assert_eq!(ver.to_string(), "1.2.1");
     }
 }

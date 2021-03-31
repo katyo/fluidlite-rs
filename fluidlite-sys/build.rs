@@ -53,9 +53,9 @@ fn main() {
 
     if !try_find_and_use_library() {
         let lib_dir = out_dir;
-        if !has_lib_file(lib_dir, LIB_NAME, cfg!(feature = "shared")) {
-            build_library(src_dir, lib_dir);
-        }
+        //if !has_lib_file(lib_dir, LIB_NAME, cfg!(feature = "shared")) {
+        build_library(src_dir, lib_dir);
+        //}
 
         add_lib_path(lib_dir);
         add_lib(LIB_NAME, !cfg!(not(feature = "shared")));
@@ -111,6 +111,7 @@ fn update_bindings(bind_file: impl AsRef<Path>, dest_file: impl AsRef<Path>) {
     }
 }
 
+/*
 fn lib_file(name: impl AsRef<str>, shared: bool) -> String {
     #[cfg(target_os = "windows")]
     {
@@ -126,6 +127,7 @@ fn lib_file(name: impl AsRef<str>, shared: bool) -> String {
 fn has_lib_file(lib_dir: impl AsRef<Path>, name: impl AsRef<str>, shared: bool) -> bool {
     lib_dir.as_ref().join(lib_file(name, shared)).is_file()
 }
+*/
 
 fn add_lib(name: &str, static_: bool) {
     println!(
