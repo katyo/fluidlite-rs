@@ -1,6 +1,6 @@
 [package]
 name = "fluidlite-sys"
-version = "0.1.4"
+version = "0.2.0"
 description = "Unsafe bindings to fluidlite library"
 categories = ["external-ffi-bindings", "multimedia::audio"]
 keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
@@ -10,29 +10,28 @@ readme = "README.md"
 repository = "https://github.com/katyo/fluidlite-rs"
 edition = "2018"
 
-[badges.travis-ci]
-repository = "katyo/fluidlite-rs"
-
-[badges.is-it-maintained-issue-resolution]
-repository = "katyo/fluidlite-rs"
-
-[badges.is-it-maintained-open-issues]
-repository = "katyo/fluidlite-rs"
-
 [badges.maintenance]
 status = "passively-maintained"
-
-[build-dependencies.fetch_unroll]
-version = "^0.3"
-optional = true
 
 [build-dependencies.bindgen]
 version = "^0.57"
 optional = true
 
+[build-dependencies.pkg-config]
+version = "^0.3.9"
+optional = true
+
+[build-dependencies.cc]
+version = "^1"
+features = ["parallel"]
+
 [features]
-generate-bindings = ["fetch_unroll", "bindgen"]
-update-bindings = ["generate-bindings"]
+update-bindings = ["bindgen"]
+builtin = []
+with-sf3 = []
+with-stb = []
+shared = []
+static = []
 rustdoc = []
 
 [package.metadata.docs.rs]

@@ -1,6 +1,6 @@
 [package]
 name = "fluidlite"
-version = "0.1.4"
+version = "0.2.0"
 description = "Safe bindings to fluidlite library"
 categories = ["external-ffi-bindings", "multimedia::audio"]
 keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
@@ -9,15 +9,6 @@ license = "LGPL-2.1"
 readme = "README.md"
 repository = "https://github.com/katyo/fluidlite-rs"
 edition = "2018"
-
-[badges.travis-ci]
-repository = "katyo/fluidlite-rs"
-
-[badges.is-it-maintained-issue-resolution]
-repository = "katyo/fluidlite-rs"
-
-[badges.is-it-maintained-open-issues]
-repository = "katyo/fluidlite-rs"
 
 [badges.maintenance]
 status = "passively-maintained"
@@ -33,18 +24,25 @@ optional = true
 
 [dependencies.fluidlite-sys]
 path = "../fluidlite-sys"
-version = "0.1.4"
+version = "0.2.0"
+
+[dev-dependencies.fluidlite-sys]
+path = "../fluidlite-sys"
+version = "0.2.0"
+features = ["builtin", "with-sf3", "with-stb"]
 
 [dev-dependencies]
 byte-slice-cast = "^1"
 
-[dev-dependencies.fluidlite-lib]
-path = "../fluidlite-lib"
-version = "0.1.4"
-features = ["with-sf3", "with-stb"]
-
 [features]
-generate-bindings = ["fluidlite-sys/generate-bindings"]
+default = []
+bindgen = ["fluidlite-sys/bindgen"]
+builtin = ["fluidlite-sys/builtin"]
+pkg-config = ["fluidlite-sys/pkg-config"]
+with-sf3 = ["fluidlite-sys/with-sf3"]
+with-stb = ["fluidlite-sys/with-stb"]
+shared = ["fluidlite-sys/shared"]
+static = ["fluidlite-sys/static"]
 rustdoc = ["fluidlite-sys/rustdoc", "log"]
 
 [package.metadata.docs.rs]

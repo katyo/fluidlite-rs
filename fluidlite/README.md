@@ -24,11 +24,18 @@ This project aims provide safe Rust bindings to [fluidlite](https://github.com/d
 
 * [__fluidlite__](https://crates.io/crates/fluidlite) Safe bindings
 * [__fluidlite-sys__](https://crates.io/crates/fluidlite-sys) Unsafe bindings (generated using bindgen)
-* [__fluidlite-lib__](https://crates.io/crates/fluidlite-lib) Bundled library
 
 ## Features
 
-* __generate-bindings__ Force generate bindings on build instead of using pre-generated
+* __bindgen__ Force generate bindings itself instead of use pre-generated
+* __builtin__ Force compile builtin _fluidlite_ C-library
+* __pkg-config__ Use _pkg-config_ to find installed libraries
+* __with-sf3__ Enable _SoundFont3_ support (SF2 with vorbis-encoded samples)
+* __with-stb__ Use _stb-vorbis_ decoder instead of _libvorbis_/_libogg_.
+* __shared__ Build shared _fluidlite_ C-library
+* __static__ Build static _fluidlite_ C-library
+
+When __pkg-config__ feature is used the installed __fluidlite__ library will be used if found. To force build and link builtin version you can use __builtin__ feature.
 
 ## Example
 

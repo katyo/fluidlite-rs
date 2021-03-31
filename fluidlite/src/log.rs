@@ -115,7 +115,6 @@ pub trait Logger {
 Closure logger wrapper
 
 ```
-# use fluidlite_lib as _;
 use fluidlite::{Log, LogLevel, FnLogger};
 
 Log::set(&LogLevel::DEBUG,
@@ -262,7 +261,6 @@ mod logger {
     Logger implementation backed by [log](https://crates.io/crates/log) crate.
 
     ```
-    # use fluidlite_lib as _;
     use fluidlite::{Log, LogLevel, LogLogger};
 
     Log::set(&LogLevel::DEBUG, LogLogger::default());
