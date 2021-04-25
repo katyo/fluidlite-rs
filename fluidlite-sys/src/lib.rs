@@ -6,9 +6,8 @@ This crate provides generated unsafe Rust bindings to [fluidlite](https://github
 Probably this isn't that you really need. See [safe bindings](https://crates.io/crate/fluidlite).
  */
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
+#![allow(non_upper_case_globals, non_camel_case_types, non_snake_case)]
+#![cfg_attr(test, allow(deref_nullptr))]
 
 pub const FLUID_OK: std::os::raw::c_int = 0;
 pub const FLUID_FAILED: std::os::raw::c_int = -1;

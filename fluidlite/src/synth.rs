@@ -95,12 +95,12 @@ mod test {
         synth.note_on(0, 60, 127).unwrap();
 
         synth.write(samples.as_mut()).unwrap();
-        pcm.write(samples.as_byte_slice()).unwrap();
+        pcm.write_all(samples.as_byte_slice()).unwrap();
 
         synth.note_off(0, 60).unwrap();
 
         synth.write(samples.as_mut()).unwrap();
-        pcm.write(samples.as_byte_slice()).unwrap();
+        pcm.write_all(samples.as_byte_slice()).unwrap();
 
         drop(synth);
     }
@@ -120,12 +120,12 @@ mod test {
         synth.note_on(0, 60, 127).unwrap();
 
         synth.write(samples.as_mut()).unwrap();
-        pcm.write(samples.as_byte_slice()).unwrap();
+        pcm.write_all(samples.as_byte_slice()).unwrap();
 
         synth.note_off(0, 60).unwrap();
 
         synth.write(samples.as_mut()).unwrap();
-        pcm.write(samples.as_byte_slice()).unwrap();
+        pcm.write_all(samples.as_byte_slice()).unwrap();
 
         drop(synth);
     }

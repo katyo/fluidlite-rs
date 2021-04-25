@@ -27,7 +27,7 @@ fn main() {
         if bindings_filepath(&bindings_file).as_ref().is_file() {
             println!("cargo:rustc-env=FLUIDLITE_BINDINGS={}", bindings_file);
         } else {
-            panic!("No prebuilt bindings. Try use `generate-bindings` feature.",);
+            panic!("No prebuilt bindings. Try use `bindgen` feature.",);
         }
     }
 
@@ -75,12 +75,12 @@ fn generate_bindings<P: AsRef<Path>>(
                 .map(|dir| format!("-I{}", dir.as_ref().display())),
         )
         .header_contents("library.h", "#include <fluidlite.h>")
-        .whitelist_var("FLUID_.*")
-        .whitelist_var("SEEK_.*")
-        .whitelist_type("fluid_.*")
-        .whitelist_function("fluid_.*")
-        .whitelist_function("new_fluid_.*")
-        .whitelist_function("delete_fluid_.*")
+        .allowlist_var("FLUID_.*")
+        .allowlist_var("SEEK_.*")
+        .allowlist_type("fluid_.*")
+        .allowlist_function("fluid_.*")
+        .allowlist_function("new_fluid_.*")
+        .allowlist_function("delete_fluid_.*")
         .generate()
         .expect("Generated bindings.");
 
