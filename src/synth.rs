@@ -88,7 +88,7 @@ mod test {
 
         let synth = Synth::new(settings).unwrap();
 
-        synth.sfload("../sf_/Boomwhacker.sf2", true).unwrap();
+        synth.sfload("sf_/Boomwhacker.sf2", true).unwrap();
 
         let mut samples = [0f32; 44100 * 2];
 
@@ -113,7 +113,7 @@ mod test {
 
         let synth = Synth::new(settings).unwrap();
 
-        synth.sfload("../sf_/Boomwhacker.sf3", true).unwrap();
+        synth.sfload("sf_/Boomwhacker.sf3", true).unwrap();
 
         let mut samples = [0f32; 44100 * 2];
 

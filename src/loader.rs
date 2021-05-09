@@ -231,6 +231,6 @@ mod test {
         loader.set_file_api(TestFileApi);
         synth.add_sfloader(loader);
 
-        synth.sfload("../sf_/Boomwhacker.sf3", true).unwrap();
+        synth.sfload("sf_/Boomwhacker.sf3", true).unwrap();
     }
 }

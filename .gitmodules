@@ -1,3 +1,3 @@
-[submodule "fluidlite-sys/lib"]
-	path = fluidlite-sys/lib
+[submodule "sys/lib"]
+	path = sys/lib
 	url = ../fluidlite
