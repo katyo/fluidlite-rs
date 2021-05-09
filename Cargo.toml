@@ -1,5 +1,53 @@
+[package]
+name = "fluidlite"
+version = "0.2.1"
+description = "Safe bindings to fluidlite library"
+categories = ["external-ffi-bindings", "multimedia::audio"]
+keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
+authors = ["K. <kayo@illumium.org>"]
+license = "LGPL-2.1"
+readme = "README.md"
+repository = "https://github.com/katyo/fluidlite-rs"
+edition = "2018"
+
 [workspace]
-members = [
-  "fluidlite-sys",
-  "fluidlite",
-]
+members = ["sys"]
+
+[badges.maintenance]
+status = "passively-maintained"
+
+[dependencies]
+bitflags = "1.2"
+
+[dependencies.log]
+version = "0.4"
+optional = true
+
+[dependencies.fluidlite-sys]
+path = "sys"
+version = "0.2.0"
+
+[build-dependencies]
+doc-comment = "0.3.3"
+
+[dev-dependencies.fluidlite-sys]
+path = "sys"
+version = "0.2.0"
+features = ["builtin", "with-sf3", "with-stb"]
+
+[dev-dependencies]
+byte-slice-cast = "1"
+
+[features]
+default = []
+bindgen = ["fluidlite-sys/bindgen"]
+builtin = ["fluidlite-sys/builtin"]
+pkg-config = ["fluidlite-sys/pkg-config"]
+with-sf3 = ["fluidlite-sys/with-sf3"]
+with-stb = ["fluidlite-sys/with-stb"]
+shared = ["fluidlite-sys/shared"]
+static = ["fluidlite-sys/static"]
+rustdoc = ["fluidlite-sys/rustdoc", "log"]
+
+[package.metadata.docs.rs]
+features = ["rustdoc"]
