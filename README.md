@@ -6,6 +6,8 @@
 [![LGPL-2.1](https://img.shields.io/badge/License-LGPL--2.1-brightgreen.svg?style=for-the-badge)](https://opensource.org/licenses/LGPL-2.1)
 [![CI](https://img.shields.io/github/workflow/status/katyo/fluidlite-rs/Rust?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/katyo/fluidlite-rs/actions?query=workflow%3ARust)
 
+This project aims provide safe Rust bindings to [fluidlite](https://github.com/katyo/fluidlite) C library.
+
 > FluidLite is a very light version of FluidSynth designed to be hardware,
 > platform and external dependency independant. It only uses standard C libraries.
 >
@@ -18,8 +20,6 @@
 > therefore MIDI file reading, realtime MIDI events and audio output
 > must be implemented externally.
 
-This project aims provide safe Rust bindings to [fluidlite](https://github.com/katyo/fluidlite) C library.
-
 ## Crates
 
 * [__fluidlite__](https://crates.io/crates/fluidlite) Safe bindings
@@ -27,12 +27,37 @@ This project aims provide safe Rust bindings to [fluidlite](https://github.com/k
 
 ## Features
 
-* __bindgen__ Force generate bindings itself instead of use pre-generated
-* __builtin__ Force compile builtin _fluidlite_ C-library
-* __pkg-config__ Use _pkg-config_ to find installed libraries
-* __with-sf3__ Enable _SoundFont3_ support (SF2 with vorbis-encoded samples)
-* __with-stb__ Use _stb-vorbis_ decoder instead of _libvorbis_/_libogg_.
-* __shared__ Build shared _fluidlite_ C-library
-* __static__ Build static _fluidlite_ C-library
+ * __bindgen__ Force generate bindings itself instead of use pre-generated
+ * __builtin__ Force compile builtin _fluidlite_ C-library
+ * __pkg-config__ Use _pkg-config_ to find installed libraries
+ * __with-sf3__ Enable _SoundFont3_ support (SF2 with vorbis-encoded samples)
+ * __with-stb__ Use _stb-vorbis_ decoder instead of _libvorbis_/_libogg_.
+ * __shared__ Build shared _fluidlite_ C-library
+ * __static__ Build static _fluidlite_ C-library
 
 When __pkg-config__ feature is used the installed __fluidlite__ library will be used if found. To force build and link builtin version you can use __builtin__ feature.
+
+## Example
+
+```rust
+use std::{fs::File, io::Write};
+use byte_slice_cast::AsByteSlice;
+use fluidlite::{Settings, Synth};
+
+let settings = Settings::new().unwrap();
+
+let synth = Synth::new(settings).unwrap();
+synth.sfload("soundfont.sf3", true).unwrap();
+
+let mut buffer = [0i16; 44100 * 2];
+let mut file = File::create("soundfont-sample.pcm").unwrap();
+
+synth.note_on(0, 60, 127).unwrap();
+synth.write(buffer.as_mut()).unwrap();
+file.write(buffer.as_byte_slice()).unwrap();
+
+synth.note_off(0, 60).unwrap();
+synth.write(buffer.as_mut()).unwrap();
+file.write(buffer.as_byte_slice()).unwrap();
+```
+
