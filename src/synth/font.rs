@@ -129,14 +129,14 @@ mod test {
 
         assert_eq!(synth.sfcount(), 0);
 
-        synth.sfload("../sf_/Boomwhacker.sf2", true).unwrap();
+        synth.sfload("sf_/Boomwhacker.sf2", true).unwrap();
 
         assert_eq!(synth.sfcount(), 1);
 
         let font = synth.get_sfont(0).unwrap();
 
         assert_eq!(font.get_id(), 1);
-        assert_eq!(font.get_name().unwrap(), "../sf_/Boomwhacker.sf2");
+        assert_eq!(font.get_name().unwrap(), "sf_/Boomwhacker.sf2");
 
         let preset = font.get_preset(0, 0).unwrap();
 
