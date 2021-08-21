@@ -1,6 +1,6 @@
 [package]
 name = "fluidlite-sys"
-version = "0.2.0"
+version = "0.2.1"
 description = "Unsafe bindings to fluidlite library"
 categories = ["external-ffi-bindings", "multimedia::audio"]
 keywords = ["audio", "synth", "soundfont", "sf2", "sf3"]
@@ -15,15 +15,15 @@ links = "fluidlite"
 status = "passively-maintained"
 
 [build-dependencies.bindgen]
-version = "^0.58"
+version = "0.59"
 optional = true
 
 [build-dependencies.pkg-config]
-version = "^0.3.19"
+version = "0.3.19"
 optional = true
 
 [build-dependencies.cc]
-version = "^1.0.67"
+version = "1.0.67"
 features = ["parallel"]
 
 [features]
