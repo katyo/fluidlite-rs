@@ -1,7 +1,7 @@
 { pkgs ? import <nixpkgs> {}, ... }:
 with pkgs;
 let
-  llvmPackages = llvmPackages_11;
+  llvmPackages = llvmPackages_12;
   clang = llvmPackages.clang-unwrapped;
   libclang = llvmPackages.libclang;
   llvm = llvmPackages.llvm;
