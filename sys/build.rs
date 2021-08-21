@@ -161,7 +161,7 @@ fn cc_use_pkg(build: &mut cc::Build, pkg: &pkg_config::Library) {
         }
     }
     build.includes(&pkg.include_paths);
-    rust_use_pkg(&pkg);
+    rust_use_pkg(pkg);
 }
 
 #[cfg(feature = "pkg-config")]
@@ -246,7 +246,7 @@ fn try_find_library_inc_dirs() -> Option<Vec<std::path::PathBuf>> {
 fn check_header(out_dir: &Path, build: &mut cc::Build, name: &str, required: bool) {
     use std::fs;
 
-    if {
+    let compiled = {
         let tmp_src = out_dir.join(format!("check_header_{}.c", name));
         fs::write(&tmp_src, format!("#include \"{}\"", name)).unwrap();
 
@@ -254,10 +254,10 @@ fn check_header(out_dir: &Path, build: &mut cc::Build, name: &str, required: boo
         build.file(&tmp_src);
 
         let tmp_obj = format!("check_header_{}.o", name);
-        let result = build.try_compile(&tmp_obj).is_ok();
+        build.try_compile(&tmp_obj).is_ok()
+    };
 
-        result
-    } {
+    if compiled {
         let tmp_def = format!(
             "HAVE_{}",
             name.to_ascii_uppercase()
@@ -281,7 +281,7 @@ fn build_library(src_dir: &Path, lib_dir: &Path) {
     for header in &[
         "string.h", "stdlib.h", "stdio.h", "math.h", "stdarg.h", "fcntl.h", "limits.h",
     ] {
-        check_header(&lib_dir, &mut build, &header, true);
+        check_header(lib_dir, &mut build, header, true);
     }
 
     build.include(src_dir.join("include"));

@@ -129,7 +129,7 @@ extern "C" fn open_wrapper<F: FileApi>(
 
     let filename = Path::new(filename);
 
-    if let Some(handle) = fapi_rs.open(&filename) {
+    if let Some(handle) = fapi_rs.open(filename) {
         Box::into_raw(Box::new(handle)) as _
     } else {
         null_mut()
