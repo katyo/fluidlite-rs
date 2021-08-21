@@ -47,7 +47,7 @@ use fluidlite::{Settings, Synth};
 let settings = Settings::new().unwrap();
 
 let synth = Synth::new(settings).unwrap();
-synth.sfload("soundfont.sf3", true).unwrap();
+synth.sfload("sf_/Boomwhacker.sf3", true).unwrap();
 
 let mut buffer = [0i16; 44100 * 2];
 let mut file = File::create("soundfont-sample.pcm").unwrap();
@@ -60,4 +60,3 @@ synth.note_off(0, 60).unwrap();
 synth.write(buffer.as_mut()).unwrap();
 file.write(buffer.as_byte_slice()).unwrap();
 ```
-
