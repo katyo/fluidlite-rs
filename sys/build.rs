@@ -243,11 +243,46 @@ fn try_find_library_inc_dirs() -> Option<Vec<std::path::PathBuf>> {
     }
 }
 
+fn check_header(out_dir: &Path, build: &mut cc::Build, name: &str, required: bool) {
+    use std::fs;
+
+    if {
+        let tmp_src = out_dir.join(format!("check_header_{}.c", name));
+        fs::write(&tmp_src, format!("#include \"{}\"", name)).unwrap();
+
+        let mut build = build.clone();
+        build.file(&tmp_src);
+
+        let tmp_obj = format!("check_header_{}.o", name);
+        let result = build.try_compile(&tmp_obj).is_ok();
+
+        result
+    } {
+        let tmp_def = format!(
+            "HAVE_{}",
+            name.to_ascii_uppercase()
+                .replace(|c: char| !c.is_ascii_alphanumeric(), "_")
+        );
+        eprintln!("#define {} 1", &tmp_def);
+        build.define(&tmp_def, Some("1"));
+    } else if required {
+        panic!("The required header \"{}\" does not found.", name);
+    } else {
+        eprintln!("The header \"{}\" does not found.", name);
+    }
+}
+
 fn build_library(src_dir: &Path, lib_dir: &Path) {
     let mut build = cc::Build::new();
 
     build.out_dir(lib_dir);
     build.flag_if_supported("-std=c99");
+
+    for header in &[
+        "string.h", "stdlib.h", "stdio.h", "math.h", "stdarg.h", "fcntl.h", "limits.h",
+    ] {
+        check_header(&lib_dir, &mut build, &header, true);
+    }
 
     build.include(src_dir.join("include"));
     build.files(
