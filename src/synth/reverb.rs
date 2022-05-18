@@ -31,7 +31,7 @@ impl Synth {
      */
     pub fn set_reverb_params(&self, roomsize: f64, damp: f64, width: f64, level: f64) {
         unsafe {
-            ffi::fluid_synth_set_reverb(self.handle, roomsize, damp, width, level);
+            ffi::fluid_synth_set_reverb(self.handle.as_ptr(), roomsize, damp, width, level);
         }
     }
 
@@ -47,7 +47,7 @@ impl Synth {
      */
     pub fn set_reverb_on(&self, on: bool) {
         unsafe {
-            ffi::fluid_synth_set_reverb_on(self.handle, on as _);
+            ffi::fluid_synth_set_reverb_on(self.handle.as_ptr(), on as _);
         }
     }
 
@@ -55,28 +55,28 @@ impl Synth {
     Query the current reverb room size
      */
     pub fn get_reverb_roomsize(&self) -> f64 {
-        unsafe { ffi::fluid_synth_get_reverb_roomsize(self.handle) }
+        unsafe { ffi::fluid_synth_get_reverb_roomsize(self.handle.as_ptr()) }
     }
 
     /**
     Query the current reverb dumping
      */
     pub fn get_reverb_damp(&self) -> f64 {
-        unsafe { ffi::fluid_synth_get_reverb_damp(self.handle) }
+        unsafe { ffi::fluid_synth_get_reverb_damp(self.handle.as_ptr()) }
     }
 
     /**
     Query the current reverb level
      */
     pub fn get_reverb_level(&self) -> f64 {
-        unsafe { ffi::fluid_synth_get_reverb_level(self.handle) }
+        unsafe { ffi::fluid_synth_get_reverb_level(self.handle.as_ptr()) }
     }
 
     /**
     Query the current reverb width
      */
     pub fn get_reverb_width(&self) -> f64 {
-        unsafe { ffi::fluid_synth_get_reverb_width(self.handle) }
+        unsafe { ffi::fluid_synth_get_reverb_width(self.handle.as_ptr()) }
     }
 
     /**

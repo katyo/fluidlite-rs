@@ -2,10 +2,10 @@ use crate::{ffi, result_from_ptr, Result};
 use std::{
     ffi::CStr,
     io::SeekFrom,
-    mem::{transmute, MaybeUninit},
+    mem::MaybeUninit,
     os::raw::{c_char, c_int, c_long, c_void},
     path::Path,
-    ptr::null_mut,
+    ptr::{null_mut, NonNull},
     slice::from_raw_parts_mut,
 };
 
@@ -37,7 +37,7 @@ The SoundFont loader object
  */
 #[repr(transparent)]
 pub struct Loader {
-    handle: *mut ffi::fluid_sfloader_t,
+    handle: NonNull<ffi::fluid_sfloader_t>,
 }
 
 unsafe impl Send for Loader {}
@@ -50,15 +50,17 @@ impl Loader {
         result_from_ptr(unsafe { ffi::new_fluid_defsfloader() }).map(|handle| Self { handle })
     }
 
-    pub(crate) fn into_ptr(self) -> *mut ffi::fluid_sfloader_t {
-        unsafe { transmute(self) }
+    pub(crate) fn into_ptr(self) -> NonNull<ffi::fluid_sfloader_t> {
+        let handle = self.handle;
+        std::mem::forget(self);
+        handle
     }
 
     /**
     Set the file reading API which will be used by loader
      */
     pub fn set_file_api<F: FileApi>(&self, fileapi: F) {
-        let handle = unsafe { &mut *self.handle };
+        let handle = unsafe { &mut *self.handle.as_ptr() };
 
         handle.fileapi = wrap_fileapi(fileapi);
     }
@@ -85,7 +87,7 @@ impl Loader {
 impl Drop for Loader {
     fn drop(&mut self) {
         unsafe {
-            ffi::delete_fluid_defsfloader(self.handle);
+            ffi::delete_fluid_defsfloader(self.handle.as_ptr());
         }
     }
 }

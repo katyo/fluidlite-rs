@@ -69,7 +69,7 @@ impl Synth {
         rincr: u32,
     ) -> Status {
         self.zero_ok(ffi::fluid_synth_write_s16(
-            self.handle,
+            self.handle.as_ptr(),
             len as _,
             lbuf as _,
             loff as _,
@@ -101,7 +101,7 @@ impl Synth {
         rincr: u32,
     ) -> Status {
         self.zero_ok(ffi::fluid_synth_write_float(
-            self.handle,
+            self.handle.as_ptr(),
             len as _,
             lbuf as _,
             loff as _,
