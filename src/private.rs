@@ -1,5 +1,5 @@
 pub trait HasHandle {
     type Handle;
 
-    fn get_handle(&self) -> *mut Self::Handle;
+    fn get_handle(&self) -> std::ptr::NonNull<Self::Handle>;
 }

@@ -3,7 +3,7 @@ use std::{
     ffi::{CStr, CString},
     marker::PhantomData,
     mem::MaybeUninit,
-    ptr::null_mut,
+    ptr::{null_mut, NonNull},
 };
 
 /**
@@ -26,7 +26,7 @@ impl Synth {
         let name = CString::new(name.as_ref()).unwrap();
         self.zero_ok(unsafe {
             ffi::fluid_synth_create_key_tuning(
-                self.handle,
+                self.handle.as_ptr(),
                 tuning_bank as _,
                 tuning_prog as _,
                 name.as_ptr(),
@@ -52,7 +52,7 @@ impl Synth {
         let name = CString::new(name.as_ref()).unwrap();
         self.zero_ok(unsafe {
             ffi::fluid_synth_create_octave_tuning(
-                self.handle,
+                self.handle.as_ptr(),
                 tuning_bank as _,
                 tuning_prog as _,
                 name.as_ptr(),
@@ -72,7 +72,7 @@ impl Synth {
         let name = CString::new(name.as_ref()).unwrap();
         self.zero_ok(unsafe {
             ffi::fluid_synth_activate_octave_tuning(
-                self.handle,
+                self.handle.as_ptr(),
                 bank as _,
                 prog as _,
                 name.as_ptr(),
@@ -106,7 +106,7 @@ impl Synth {
         let len = keys.len().min(pitch.len());
         self.zero_ok(unsafe {
             ffi::fluid_synth_tune_notes(
-                self.handle,
+                self.handle.as_ptr(),
                 tuning_bank as _,
                 tuning_prog as _,
                 len as _,
@@ -123,7 +123,7 @@ impl Synth {
     pub fn select_tuning(&self, chan: Chan, tuning_bank: Bank, tuning_prog: Prog) -> Status {
         self.zero_ok(unsafe {
             ffi::fluid_synth_select_tuning(
-                self.handle,
+                self.handle.as_ptr(),
                 chan as _,
                 tuning_bank as _,
                 tuning_prog as _,
@@ -134,7 +134,7 @@ impl Synth {
     pub fn activate_tuning(&self, chan: Chan, bank: Bank, prog: Prog, apply: bool) -> Status {
         self.zero_ok(unsafe {
             ffi::fluid_synth_activate_tuning(
-                self.handle,
+                self.handle.as_ptr(),
                 chan as _,
                 bank as _,
                 prog as _,
@@ -147,14 +147,14 @@ impl Synth {
     Set the tuning to the default well-tempered tuning on a channel.
      */
     pub fn reset_tuning(&self, chan: Chan) -> Status {
-        self.zero_ok(unsafe { ffi::fluid_synth_reset_tuning(self.handle, chan as _) })
+        self.zero_ok(unsafe { ffi::fluid_synth_reset_tuning(self.handle.as_ptr(), chan as _) })
     }
 
     /**
     Get the iterator throught the list of available tunings.
      */
     pub fn tuning_iter(&self) -> TuningIter<'_> {
-        TuningIter::from_ptr(self.handle)
+        unsafe { TuningIter::from_ptr(self.handle) }
     }
 
     /**
@@ -170,7 +170,7 @@ impl Synth {
 
         self.zero_ok(unsafe {
             ffi::fluid_synth_tuning_dump(
-                self.handle,
+                self.handle.as_ptr(),
                 bank as _,
                 prog as _,
                 name.as_mut_ptr() as _,
@@ -199,7 +199,7 @@ impl Synth {
 
         self.zero_ok(unsafe {
             ffi::fluid_synth_tuning_dump(
-                self.handle,
+                self.handle.as_ptr(),
                 bank as _,
                 prog as _,
                 name.as_mut_ptr() as _,
@@ -223,7 +223,7 @@ impl Synth {
 
         self.zero_ok(unsafe {
             ffi::fluid_synth_tuning_dump(
-                self.handle,
+                self.handle.as_ptr(),
                 bank as _,
                 prog as _,
                 null_mut(),
@@ -239,14 +239,14 @@ impl Synth {
 The iterator over tunings
  */
 pub struct TuningIter<'a> {
-    handle: *mut ffi::fluid_synth_t,
+    handle: NonNull<ffi::fluid_synth_t>,
     phantom: PhantomData<&'a ()>,
     init: bool,
     next: bool,
 }
 
 impl<'a> TuningIter<'a> {
-    fn from_ptr(handle: *mut ffi::fluid_synth_t) -> Self {
+    unsafe fn from_ptr(handle: NonNull<ffi::fluid_synth_t>) -> Self {
         Self {
             handle,
             phantom: PhantomData,
@@ -263,7 +263,7 @@ impl<'a> Iterator for TuningIter<'a> {
         if self.init {
             self.init = false;
             unsafe {
-                ffi::fluid_synth_tuning_iteration_start(self.handle);
+                ffi::fluid_synth_tuning_iteration_start(self.handle.as_ptr());
             }
         }
         if self.next {
@@ -272,7 +272,7 @@ impl<'a> Iterator for TuningIter<'a> {
             self.next = 0
                 != unsafe {
                     ffi::fluid_synth_tuning_iteration_next(
-                        self.handle,
+                        self.handle.as_ptr(),
                         bank.as_mut_ptr(),
                         prog.as_mut_ptr(),
                     )

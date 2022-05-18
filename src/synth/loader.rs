@@ -8,7 +8,7 @@ impl Synth {
      */
     pub fn add_sfloader(&self, loader: Loader) {
         unsafe {
-            ffi::fluid_synth_add_sfloader(self.handle, loader.into_ptr());
+            ffi::fluid_synth_add_sfloader(self.handle.as_ptr(), loader.into_ptr().as_ptr());
         }
     }
 }

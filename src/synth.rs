@@ -11,6 +11,8 @@ mod reverb;
 mod tuning;
 mod write;
 
+use std::ptr::NonNull;
+
 pub use self::tuning::TuningIter;
 pub use self::write::IsSamples;
 
@@ -31,8 +33,9 @@ the audio device and create a background audio thread.
 The API for sending MIDI events is probably what you expect:
 `Synth::noteon()`, `Synth::noteoff()`, ...
  */
+#[repr(transparent)]
 pub struct Synth {
-    handle: *mut ffi::fluid_synth_t,
+    handle: NonNull<ffi::fluid_synth_t>,
 }
 
 unsafe impl Send for Synth {}
@@ -44,7 +47,7 @@ impl Synth {
     As soon as the synthesizer is created, it will start playing.
      */
     pub fn new(settings: Settings) -> Result<Self> {
-        result_from_ptr(unsafe { ffi::new_fluid_synth(settings.into_ptr()) })
+        result_from_ptr(unsafe { ffi::new_fluid_synth(settings.into_ptr().as_ptr()) })
             .map(|handle| Self { handle })
     }
 
@@ -53,7 +56,7 @@ impl Synth {
      */
     pub fn set_sample_rate(&self, sample_rate: f32) {
         unsafe {
-            ffi::fluid_synth_set_sample_rate(self.handle, sample_rate);
+            ffi::fluid_synth_set_sample_rate(self.handle.as_ptr(), sample_rate);
         }
     }
 
@@ -61,15 +64,19 @@ impl Synth {
     Get a reference to the settings of the synthesizer.
      */
     pub fn get_settings(&self) -> SettingsRef<'_> {
-        SettingsRef::from_ptr(unsafe { ffi::fluid_synth_get_settings(self.handle) })
+        unsafe {
+            let settings = ffi::fluid_synth_get_settings(self.handle.as_ptr());
+            SettingsRef::from_ptr(NonNull::new_unchecked(settings))
+        }
     }
 }
 
 impl Drop for Synth {
     fn drop(&mut self) {
-        let _settings = Settings::from_ptr(unsafe { ffi::fluid_synth_get_settings(self.handle) });
         unsafe {
-            ffi::delete_fluid_synth(self.handle);
+            let _settings = ffi::fluid_synth_get_settings(self.handle.as_ptr());
+            let _settings = Settings::from_ptr(NonNull::new_unchecked(_settings));
+            ffi::delete_fluid_synth(self.handle.as_ptr());
         }
     }
 }

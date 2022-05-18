@@ -6,7 +6,7 @@ impl Synth {
     Get a textual representation of the last error
      */
     pub(super) fn error(&self) -> String {
-        let error = unsafe { ffi::fluid_synth_error(self.handle) };
+        let error = unsafe { ffi::fluid_synth_error(self.handle.as_ptr()) };
         let error = unsafe { CStr::from_ptr(error) };
         error.to_str().unwrap().into()
     }

@@ -1,6 +1,7 @@
 use std::{
     error::Error as StdError,
     fmt::{Display, Formatter, Result as FmtResult},
+    ptr::NonNull,
     result::Result as StdResult,
 };
 
@@ -61,18 +62,12 @@ impl Display for Error {
     }
 }
 
-pub(crate) fn result_from_ptr<T>(ptr: *mut T) -> Result<*mut T> {
-    if ptr.is_null() {
-        Err(Error::Alloc)
-    } else {
-        Ok(ptr)
-    }
+#[inline]
+pub(crate) fn result_from_ptr<T>(ptr: *mut T) -> Result<NonNull<T>> {
+    NonNull::new(ptr).ok_or(Error::Alloc)
 }
 
-pub(crate) fn option_from_ptr<T>(ptr: *mut T) -> Option<*mut T> {
-    if ptr.is_null() {
-        None
-    } else {
-        Some(ptr)
-    }
+#[inline]
+pub(crate) fn option_from_ptr<T>(ptr: *mut T) -> Option<NonNull<T>> {
+    NonNull::new(ptr)
 }
