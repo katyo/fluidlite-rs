@@ -322,7 +322,7 @@ fn build_library(src_dir: &Path, lib_dir: &Path) {
         {
             build.define("SF3_SUPPORT", "SF3_XIPH_VORBIS");
 
-            if !try_find_and_use_pkgs(&[("vorbis", "1.3.5"), ("vorbisfile", "1.3.5")]) {
+            if !try_find_and_use_pkgs(&mut build, [("vorbis", "1.3.5"), ("vorbisfile", "1.3.5")]) {
                 // use shipped libvorbis sources
                 let src_dir = src_dir.join("libvorbis-1.3.5");
 
@@ -358,7 +358,7 @@ fn build_library(src_dir: &Path, lib_dir: &Path) {
                 );
             }
 
-            if !try_find_and_use_pkgs(Some(("ogg", "1.3.2"))) {
+            if !try_find_and_use_pkgs(&mut build, [("ogg", "1.3.2")]) {
                 // use shipped libogg sources
                 let src_dir = src_dir.join("libogg-1.3.2");
 
